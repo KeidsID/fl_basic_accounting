@@ -1,17 +1,58 @@
 # fl_basic_accounting
 
 [dart-badge]:
-  https://img.shields.io/badge/SDK-^3.7.0-red?style=flat&logo=dart&logoColor=2cb8f7&labelColor=333333&color=01579b
-[fl-badge]:
-  https://img.shields.io/badge/SDK-^3.29.0-red?style=flat&logo=flutter&logoColor=2cb8f7&labelColor=333333&color=01579b
+  https://img.shields.io/badge/SDK-^3.7.2-red?style=flat&logo=dart&logoColor=2cb8f7&labelColor=333333&color=01579b
+[flutter-badge]:
+  https://img.shields.io/badge/SDK-^3.29.2-red?style=flat&logo=flutter&logoColor=2cb8f7&labelColor=333333&color=01579b
 
-![Dart v3.7.0][dart-badge] ![Flutter v3.29.0][fl-badge]
+![dart-badge] ![flutter-badge]
 
-Simple Cash Flow based accounting system. Suitable for individuals, or small
-business owners who want to understand the flow of money without the complexity
-of a full accounting system.
+This application aims to assist users in recording and monitoring financial
+conditions through a simple **Cash Flow** based accounting system. Suitable for
+individuals, or small business owners who want to understand the flow of money
+without the complexity of a full accounting system.
 
-## Requirements
+> ⚠️ In early development stage.  
+> Features subject to change as needed.
+
+## 🎯 Main Objective
+
+- Record financial transactions efficiently.
+- Generate daily, monthly, or annual financial reports automatically:
+  - Cash Flow Statement
+  - Profit and Loss Statement
+  - Balance Sheet
+
+## 🧱 Key Features
+
+- ✍️ **Transaction Recording**  
+  Record income and expenses. In order to be formed into financial reports, each
+  record will have categories such as assets, liabilities, etc.
+
+- 📊 **Automated Reports**  
+  The application can display financial reports based on data from previous
+  transaction records.
+
+- 🗂️ **Project Based**  
+  Want to create another financial reports for business or other purposes?
+  Simply create a new project and the data will be separate from other projects.
+
+## 💡 Development Plan
+
+- [ ] Project Creation.
+
+- [ ] Recording transactions on the project.
+
+- [ ] Generation of financial reports from project transactions.
+
+- [ ] Import/Export data with the help of spreadsheet files.
+
+- [ ] If possible, integrate users' Google Drive (Spreadsheet) to share data
+      across devices, so developers don't have to pay database fees 🤣.
+
+## 💻 Developer Section
+
+### Requirements
 
 [fl-archive]: https://docs.flutter.dev/release/archive
 [fvm]: https://fvm.app/documentation
@@ -25,7 +66,7 @@ of a full accounting system.
   fvm use prod
   ```
 
-## Dependencies
+### Dependencies
 
 Main packages that are used as foundation for this project.
 
@@ -42,7 +83,7 @@ Main packages that are used as foundation for this project.
 
 Most of them need to generate its utilities with [build_runner].
 
-## Setup
+### Setup
 
 1. Install dependencies.
 
@@ -75,7 +116,7 @@ Most of them need to generate its utilities with [build_runner].
    flutter run -d <device-id>
    ```
 
-## Package Import Alias
+### Package Import Alias
 
 [pubspec.yaml]: ./pubspec.yaml
 
@@ -90,27 +131,23 @@ import "package:app/main.dart";
 import "package:fl_basic_accounting/main.dart";
 ```
 
-## Project Structures
+### Project Structures
 
 [clean-architecture]:
   https://medium.com/@DrunknCode/clean-architecture-simplified-and-in-depth-guide-026333c54454
 
-By default, this project follow the [clean-architecture], but you may modify it
-to fit your needs since only `/interfaces/` layers example are provided.
+This project will follow the [clean-architecture].
 
 ```txt
 └── lib/
     ├── domain/ (repos/services abstraction, and data entities)
     ├── infrastructures/ (repos/services implementation, "data" layer stored here too)
     ├── use_cases/ (app logic)
-    └── interfaces/ (app UI/UX, also known as "presentation" layer)
+    ├── interfaces/ (app UI/UX, also known as "presentation" layer)
+    └── **/libs/ (Shared constants, utilities, etc. May defined on others sub folders)
 ```
 
-[dicoding_story_fl]: https://github.com/KeidsID/dicoding_story_fl
-
-If you want complete example of this structure, visit [dicoding_story_fl].
-
-## Git Conventions
+### Git Conventions
 
 [conventional-commits]: https://www.conventionalcommits.org
 [release-please-action]: https://github.com/googleapis/release-please-action
@@ -118,7 +155,7 @@ If you want complete example of this structure, visit [dicoding_story_fl].
 We use [conventional-commits] to handle Git commit messages, and Github PR
 titles.
 
-### Issue Title
+#### Issue Title
 
 ```txt
 <type>(<scopes(optional)>): <content>
@@ -129,7 +166,7 @@ Examples:
 - `feat: add foo service`
 - `bug: unresponsive bar page`
 
-### Commit Message / PR Title
+#### Commit Message / PR Title
 
 ```txt
 <type>(<scopes(optional)>): <content> #<issue-number>
@@ -143,7 +180,7 @@ Examples:
 > Since [release-please-action] will need PR hash ref on commit msg, we won't
 > recommend to do rebase merge on `main` branch.
 
-### Branch Name
+#### Branch Name
 
 ```txt
 <type>-<content>-#<issue-number>
