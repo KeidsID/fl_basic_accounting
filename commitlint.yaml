@@ -1,0 +1,25 @@
+# https://github.com/hyiso/commitlint/blob/main/lib/commitlint.yaml
+include: package:commitlint_cli/commitlint.yaml
+
+# https://hyiso.github.io/commitlint/#/references-rules
+rules:
+  scope-enum:
+    - 2
+    - always
+    - - root
+      - github
+      - lib
+      - lib-domain
+      - lib-infrastructures
+      - lib-interfaces
+      - lib-use_cases
+      - android
+      - ios
+      - web
+      - windows
+      - macos
+      - linux
+
+  references-empty:
+    - 2
+    - never

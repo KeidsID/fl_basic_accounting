@@ -1,0 +1,116 @@
+name: 🚀 Continuous Delivery
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: 🚀 Release
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: 📚 Code Checkout
+        uses: actions/checkout@v4
+
+      - name: 🚀 Release
+        id: rp
+        uses: googleapis/release-please-action@v4
+        with:
+          manifest-file: release.manifest.json
+          config-file: release.config.json
+
+    outputs:
+      release_created: ${{ steps.rp.outputs.release_created }}
+      created_tag: ${{ steps.rp.outputs.tag_name }}
+
+  deps:
+    name: 📦 Setup Dependencies For Deployment
+    needs: release
+    if: ${{ needs.release.outputs.release_created }}
+    runs-on: macos-latest
+
+    steps:
+      - name: 📚 Code Checkout
+        uses: actions/checkout@v4
+
+      - name: 🐦 Setup Flutter SDK
+        id: fl-setup
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.29.x
+          cache: true
+          cache-key: |
+            fl-:channel:-v:version:-:os:-:arch:-cd-${{ hashFiles('./pubspec.lock') }}
+          pub-cache-key: |
+            fl-pub-:channel:-v:version:-:os:-:arch:-cd-${{ hashFiles('./pubspec.lock') }}
+
+      - name: 📦 Get dependencies
+        run: flutter pub get
+
+    outputs:
+      release-tag: ${{ needs.release.outputs.created_tag }}
+      fl-channel: ${{ steps.fl-setup.outputs.CHANNEL }}
+      fl-version: ${{ steps.fl-setup.outputs.VERSION }}
+      fl-cache-key: ${{ steps.fl-setup.outputs.CACHE-KEY }}
+      fl-pub-cache-key: ${{ steps.fl-setup.outputs.PUB-CACHE-KEY }}
+
+  web-github-pages:
+    name: 🚀 Web Deploy on Github Pages
+    needs: deps
+    runs-on: macos-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: 📚 Code Checkout
+        uses: actions/checkout@v4
+
+      - name: 📦 Restore Dependencies
+        uses: subosito/flutter-action@v2
+        with:
+          channel: ${{ needs.deps.outputs.fl-channel }}
+          flutter-version: ${{ needs.deps.outputs.fl-version }}
+          cache: true
+          cache-key: ${{ needs.deps.outputs.fl-cache-key }}
+          pub-cache-key: ${{ needs.deps.outputs.fl-pub-cache-key }}
+
+      - name: 🏗️ Build code utils
+        run: dart run build_runner build -d
+
+      - name: 🏗️ Generate build number
+        id: build-number
+        uses: onyxmueller/build-tag-number@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          prefix: "web--github-pages--"
+
+      - name: 🏗️ Build web release
+        env:
+          BASE_HREF: "/fl_basic_accounting/"
+          BUILD_NUMBER: ${{ steps.build-number.outputs.build_number }}
+        run: |
+          flutter build web --release --base-href ${{ env.BASE_HREF }} --build-number ${{ env.BUILD_NUMBER }}
+
+      - name: 🚀 Deploy to Github Pages
+        uses: peaceiris/actions-gh-pages@v3
+        env:
+          RELEASE_TAG: ${{ needs.deps.outputs.release-tag }}
+          BUILD_NUMBER: ${{ steps.build-number.outputs.build_number }}
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build/web
+          publish_branch: web-release
+          commit_message:
+            "${{ env.RELEASE_TAG }}+${{ env.BUILD_NUMBER }} web release"
+

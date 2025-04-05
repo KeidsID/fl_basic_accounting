@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+fl() {
+  flutter "$@" || fvm flutter "$@"
+}
+
+d() {
+  dart "$@" || fvm dart "$@"
+}
+
+fl analyze && d run custom_lint

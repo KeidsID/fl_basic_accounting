@@ -1,0 +1,61 @@
+name: app
+description: Simple Cash Flow based accounting system. Suitable for individuals, or small business owners who want to understand the flow of money without the complexity of a full accounting system.
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: ^3.7.2
+  flutter: ^3.29.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # data class
+  freezed_annotation: ^3.0.0
+  json_annotation: ^4.9.0
+
+  # deps inject
+  get_it: ^8.0.3
+  injectable: ^2.5.0
+  
+  # router
+  go_router: ^14.8.1
+
+  # state manager
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  # data class
+  freezed: ^3.0.4
+  json_serializable: ^6.9.4
+
+  # deps inject
+  injectable_generator: ^2.7.0
+
+  # router
+  go_router_builder: ^2.8.2
+
+  # state manager
+  riverpod_generator: ^2.6.5
+  
+  # lints
+  custom_lint: ^0.7.5
+  flutter_lints: ^5.0.0
+  riverpod_lint: ^2.6.5
+
+  # build
+  build_runner: ^2.4.15
+  build_verify: ^3.1.0
+
+  # gitlint
+  commitlint_cli: ^0.8.1
+  husky: ^0.1.7
+  danger_core: ^2.0.0
+
+flutter:
+  uses-material-design: true
