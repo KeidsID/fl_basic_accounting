@@ -2,6 +2,7 @@ name: 💡 Feature Request
 description: Request a new feature
 title: "feat: "
 labels: ["feat"]
+assignees: ["KeidsID"]
 body:
   - id: description
     type: textarea
@@ -15,4 +16,5 @@ body:
     type: textarea
     attributes:
       label: Additional Media
-      placeholder: Provide screenshots or videos that may help showcase the feature
+      placeholder:
+        Provide screenshots or videos that may help showcase the feature

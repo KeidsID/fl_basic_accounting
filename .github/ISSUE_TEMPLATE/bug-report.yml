@@ -2,6 +2,7 @@ name: 🪲 Bug Report
 description: Report a bug
 title: "bug:"
 labels: ["bug"]
+assignees: ["KeidsID"]
 body:
   - id: severity
     type: dropdown
@@ -32,7 +33,8 @@ body:
     type: dropdown
     attributes:
       label: Used Browser (For Web)
-      description: If the issue occurred on a web page, which browser did you use?
+      description:
+        If the issue occurred on a web page, which browser did you use?
       multiple: true
       options:
         - "Chrome"
@@ -84,4 +86,5 @@ body:
     type: textarea
     attributes:
       label: Additional Media
-      description: Provide screenshots or videos that may help showcase the issue
+      description:
+        Provide screenshots or videos that may help showcase the issue

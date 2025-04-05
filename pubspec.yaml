@@ -1,6 +1,9 @@
 name: app
-description: Simple Cash Flow based accounting system. Suitable for individuals, or small business owners who want to understand the flow of money without the complexity of a full accounting system.
-publish_to: 'none'
+description:
+  Simple Cash Flow based accounting system. Suitable for individuals, or small
+  business owners who want to understand the flow of money without the
+  complexity of a full accounting system.
+publish_to: "none"
 version: 0.1.0
 
 environment:
@@ -18,7 +21,7 @@ dependencies:
   # deps inject
   get_it: ^8.0.3
   injectable: ^2.5.0
-  
+
   # router
   go_router: ^14.8.1
 
@@ -42,7 +45,7 @@ dev_dependencies:
 
   # state manager
   riverpod_generator: ^2.6.5
-  
+
   # lints
   custom_lint: ^0.7.5
   flutter_lints: ^5.0.0
