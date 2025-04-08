@@ -9,10 +9,10 @@ abstract class CrudRepository<T extends Entity> {
   /// Store [entity] into database.
   FutureOr<T> create(T entity);
 
-  /// Return [T] entity by [id].
+  /// Return entity by [id].
   FutureOr<T> readById(int id);
 
-  /// Return list of [T] entities from database.
+  /// Return list of entities from database.
   FutureOr<List<T>> readAll();
 
   /// Update entity with [updatedEntity] values.
