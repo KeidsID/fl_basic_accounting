@@ -53,4 +53,11 @@ final class ProjectsRepositoryImpl implements ProjectsRepository {
 
     return result?.toEntity();
   }
+
+  @override
+  Stream<List<Project>> readAllAsStream() {
+    return _projectsLocalData.readAllAsStream().map(
+      (results) => results.map((e) => e.toEntity()).toList(),
+    );
+  }
 }

@@ -27,6 +27,10 @@ class ProjectsLocalData extends DatabaseAccessor<AppDatabase>
     return projects.select().get();
   }
 
+  Stream<List<ProjectModel>> readAllAsStream() {
+    return projects.select().watch();
+  }
+
   Future<ProjectModel?> readById(int id) async {
     return (projects.select()..where((tbl) => tbl.id.equals(id)))
         .getSingleOrNull();
