@@ -100,7 +100,7 @@ jobs:
           BASE_HREF: "/fl_basic_accounting/"
           BUILD_NUMBER: ${{ steps.build-number.outputs.build_number }}
         run: |
-          flutter build web --release --base-href ${{ env.BASE_HREF }} --build-number ${{ env.BUILD_NUMBER }}
+          flutter build web --release --wasm --base-href ${{ env.BASE_HREF }} --build-number ${{ env.BUILD_NUMBER }}
 
       - name: 🚀 Deploy to Github Pages
         uses: peaceiris/actions-gh-pages@v3

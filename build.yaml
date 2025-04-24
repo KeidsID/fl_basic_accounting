@@ -12,3 +12,9 @@ targets:
         options:
           explicit_to_json: true
           field_rename: snake
+
+      drift_dev:
+        options:
+          databases:
+            app_database: lib/infrastructures/libs/data/local/libs/database.dart
+          store_date_time_values_as_text: true
