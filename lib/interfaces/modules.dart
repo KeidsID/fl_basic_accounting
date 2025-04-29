@@ -1,29 +1,31 @@
+import "package:fl_utilities/fl_utilities.dart";
 import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:go_router/go_router.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 
+import "package:app/domain/entities.dart";
 import "package:app/interfaces/libs/providers.dart";
+import "package:app/interfaces/libs/widgets.dart";
 
-import "modules/products.dart";
+import "modules/projects.dart";
 
-export "modules/products.dart";
+export "modules/projects.dart";
 
 part "modules.g.dart";
-part "modules/auth_route.dart";
-part "modules/products_route.dart";
+part "modules/projects_route.dart";
 
 /// Key that store the [router]'s [NavigatorState].
 final routerKey = GlobalKey<NavigatorState>();
 
-/// Provide a [GoRouter] that re-evaluates when the providers it listens to are 
+/// Provide a [GoRouter] that re-evaluates when the providers it listens to are
 /// updated.
 @riverpod
 GoRouter router(Ref ref) {
   final router = GoRouter(
     navigatorKey: routerKey,
     debugLogDiagnostics: true,
-    initialLocation: const AuthRoute().location,
+    initialLocation: const ProjectsRoute().location,
     redirect: (context, state) => _redirectBuilder(context, state, ref),
     errorBuilder: (_, router) => NotFoundScreen(router),
     routes: $appRoutes,
@@ -43,21 +45,7 @@ FutureOr<String?> _redirectBuilder(
   GoRouterState state,
   Ref ref,
 ) async {
-  final authAsync = ref.watch(authProvider);
-
-  if (authAsync.isLoading) return null;
-
-  final isSignedIn = authAsync.value != null;
-  final currentRoutePath = state.uri.path;
-
-  final authRoutePath = const AuthRoute().location;
-  final isAuthRoute = currentRoutePath.startsWith(authRoutePath);
-
-  if (isSignedIn) {
-    return isAuthRoute ? const ProductsRoute().location : null;
-  } else {
-    return isAuthRoute ? null : authRoutePath;
-  }
+  return null;
 }
 
 class NotFoundScreen extends StatelessWidget {
@@ -81,7 +69,7 @@ class NotFoundScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16.0),
             ElevatedButton(
-              onPressed: () => const ProductsRoute().go(context),
+              onPressed: () => const ProjectsRoute().go(context),
               child: Text("Back to Home"),
             ),
           ],

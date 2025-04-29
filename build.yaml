@@ -4,12 +4,17 @@ targets:
       # https://pub.dev/packages/freezed
       freezed:
         options:
-          to_json: false
-          copy_with: false
+          copy_with: true
           equal: true
 
       # https://pub.dev/packages/json_serializable
       json_serializable:
         options:
           explicit_to_json: true
-          # field_rename: snake
+          field_rename: snake
+
+      drift_dev:
+        options:
+          databases:
+            app_database: lib/infrastructures/libs/data/local/libs/database.dart
+          store_date_time_values_as_text: true

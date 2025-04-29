@@ -1,8 +1,10 @@
 import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 
-import "service_locator.dart";
+import "package:app/interfaces/libs/themes.dart";
+
 import "interfaces/modules.dart";
+import "service_locator.dart";
 
 Future<void> main() async {
   await ServiceLocator.init();
@@ -17,12 +19,8 @@ class MainApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp.router(
       routerConfig: ref.watch(routerProvider),
-      theme: ThemeData.from(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.deepPurple,
-          brightness: Brightness.dark,
-        ),
-      ),
+      theme: AppThemes.light,
+      darkTheme: AppThemes.dark,
     );
   }
 }

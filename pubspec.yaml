@@ -29,6 +29,15 @@ dependencies:
   flutter_riverpod: ^2.6.1
   riverpod_annotation: ^2.6.1
 
+  # database
+  drift: ^2.26.0
+  drift_flutter: ^0.2.4
+
+  # interfaces
+  fl_utilities: ^3.0.1
+  flex_color_scheme: ^8.2.0
+  flutter_hooks: ^0.21.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -45,6 +54,9 @@ dev_dependencies:
 
   # state manager
   riverpod_generator: ^2.6.5
+
+  # database
+  drift_dev: ^2.26.0
 
   # lints
   custom_lint: ^0.7.5
