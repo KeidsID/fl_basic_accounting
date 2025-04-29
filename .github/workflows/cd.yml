@@ -8,14 +8,14 @@ concurrency:
   group: ${{ github.ref_name }}
   cancel-in-progress: false
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   release:
     name: 🚀 Release
     runs-on: ubuntu-latest
-
-    permissions:
-      contents: write
-      pull-requests: write
 
     steps:
       - name: 📚 Code Checkout
@@ -25,6 +25,7 @@ jobs:
         id: rp
         uses: googleapis/release-please-action@v4
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           manifest-file: release.manifest.json
           config-file: release.config.json
 
@@ -69,9 +70,6 @@ jobs:
     needs: deps
     runs-on: macos-latest
 
-    permissions:
-      contents: write
-
     steps:
       - name: 📚 Code Checkout
         uses: actions/checkout@v4
@@ -113,4 +111,3 @@ jobs:
           publish_branch: web-release
           commit_message:
             "${{ env.RELEASE_TAG }}+${{ env.BUILD_NUMBER }} web release"
-
