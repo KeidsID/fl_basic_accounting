@@ -4,7 +4,7 @@ description:
   business owners who want to understand the flow of money without the
   complexity of a full accounting system.
 publish_to: "none"
-version: 0.1.0
+version: 0.2.0
 
 environment:
   sdk: ^3.7.2
