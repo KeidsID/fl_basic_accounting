@@ -18,8 +18,11 @@ class ProjectsLocalData extends DatabaseAccessor<AppDatabase>
     required String name,
     String? description,
   }) async {
+    final Value<String?> descriptionValue =
+        description?.isNotEmpty ?? true ? Value(description) : Value(null);
+
     return projects.insertReturning(
-      ProjectsCompanion.insert(name: name, description: Value(description)),
+      ProjectsCompanion.insert(name: name, description: descriptionValue),
     );
   }
 
@@ -44,12 +47,14 @@ class ProjectsLocalData extends DatabaseAccessor<AppDatabase>
     final updatedAt = DateTime.now().toUtc();
 
     final Value<String> nameValue = name == null ? Value.absent() : Value(name);
+    final Value<String?> descriptionValue =
+        description?.isNotEmpty ?? true ? Value(description) : Value(null);
 
     final results = await (projects.update()..where((e) => e.id.equals(id)))
         .writeReturning(
           ProjectsCompanion(
             name: nameValue,
-            description: Value(description),
+            description: descriptionValue,
             updatedAt: Value(updatedAt),
           ),
         );

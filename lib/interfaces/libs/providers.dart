@@ -1,2 +1,2 @@
-export "providers/auth_provider.dart";
-export "providers/product_providers.dart";
+export "providers/projects_provider.dart";
+export "providers/project_detail_provider.dart";

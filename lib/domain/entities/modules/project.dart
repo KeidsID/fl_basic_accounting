@@ -8,6 +8,12 @@ part "project.g.dart";
 @freezed
 @JsonSerializable()
 final class Project extends Entity with _$Project {
+  @override
+  final String name;
+
+  @override
+  final String? description;
+
   Project({
     super.id,
     super.createdAt,
@@ -15,12 +21,6 @@ final class Project extends Entity with _$Project {
     required this.name,
     this.description,
   });
-
-  @override
-  final String name;
-
-  @override
-  final String? description;
 
   factory Project.fromJson(Map<String, dynamic> json) =>
       _$ProjectFromJson(json);
