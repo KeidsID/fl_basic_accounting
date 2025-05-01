@@ -43,7 +43,7 @@ dev_dependencies:
     sdk: flutter
 
   # data class
-  freezed: ^3.0.4
+  freezed: ^3.0.6
   json_serializable: ^6.9.4
 
   # deps inject
