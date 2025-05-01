@@ -40,6 +40,10 @@ jobs:
     if: ${{ needs.release.outputs.release_created }}
     runs-on: macos-latest
 
+    env:
+      JDK_VERSION: 23.0.2
+      JDK_DISTRO: oracle
+
     steps:
       - name: 📚 Code Checkout
         uses: actions/checkout@v4
@@ -56,6 +60,16 @@ jobs:
           pub-cache-key: |
             fl-pub-:channel:-v:version:-:os:-:arch:-cd-${{ hashFiles('./pubspec.lock') }}
 
+      - name: ☕ Setup JDK v${{ env.JDK_VERSION }}-${{ env.JDK_DISTRO }}
+        id: jdk
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JDK_VERSION }}
+          distribution: ${{ env.JDK_DISTRO }}
+
+      - name: 🔍 Flutter doctor
+        run: flutter doctor -v
+
       - name: 📦 Get dependencies
         run: flutter pub get
 
@@ -65,6 +79,8 @@ jobs:
       fl-version: ${{ steps.fl-setup.outputs.VERSION }}
       fl-cache-key: ${{ steps.fl-setup.outputs.CACHE-KEY }}
       fl-pub-cache-key: ${{ steps.fl-setup.outputs.PUB-CACHE-KEY }}
+      jdk-version: ${{ steps.jdk.outputs.version }}
+      jdk-distro: ${{ env.JDK_DISTRO }}
 
   web-github-pages:
     name: 🚀 Web Deploy on Github Pages
@@ -112,3 +128,72 @@ jobs:
           publish_branch: web-release
           commit_message:
             "${{ env.RELEASE_TAG }}+${{ env.BUILD_NUMBER }} web release"
+
+  apk-github-release:
+    name: 🚀 Apk Release on Github
+    needs: deps
+    runs-on: macos-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: 📚 Code Checkout
+        uses: actions/checkout@v4
+
+      - name: 📦 Restore Dependencies
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version-file: ./pubspec.yaml
+          channel: stable
+          cache: true
+          cache-key: ${{needs.deps.outputs.fl-cache-key}}
+          pub-cache-key: ${{needs.deps.outputs.fl-pub-cache-key}}
+
+      - name:
+          ☕ Setup JDK v${{ needs.deps.outputs.jdk-version }}-${{
+          needs.deps.outputs.jdk-distro }}
+        id: jdk
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ needs.deps.outputs.jdk-version }}
+          distribution: ${{ needs.deps.outputs.jdk-distro }}
+
+      - name: 📝 Accept Android licenses
+        run: "yes | flutter doctor --android-licenses"
+
+      - name: 🏗️ Build code utils
+        run: dart run build_runner build -d
+
+      - name: 📝 Setup release key
+        run: |
+          mkdir secrets
+          echo "${{ secrets.ANDROID_RELEASE_KEY_BASE64 }}" | base64 --decode > secrets/android-release-key.jks
+          echo "${{ secrets.ANDROID_KEY_PROPS_BASE64 }}" | base64 --decode > android/key.properties
+
+      - name: 🏗️ Generate build number
+        id: build-number
+        uses: onyxmueller/build-tag-number@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          prefix: "apk--github-release--"
+
+      - name: 🏗️ Build APK release
+        env:
+          BUILD_NUMBER: ${{ steps.build-number.outputs.build_number }}
+        run: |
+          flutter build apk --split-per-abi --build-number ${{ env.BUILD_NUMBER }}
+
+      - name: 🚀 Publish to Github
+        uses: softprops/action-gh-release@v2
+        env:
+          RELEASE_TAG: ${{ needs.deps.outputs.release-tag }}
+          BUILD_NUMBER: ${{ steps.build-number.outputs.build_number }}
+        with:
+          name: "${{ env.RELEASE_TAG }}+${{ env.BUILD_NUMBER }} APK Release"
+          tag_name: "${{ env.RELEASE_TAG }}+${{ env.BUILD_NUMBER }}--apk-build"
+          generate_release_notes: true
+          files: |
+            build/app/outputs/flutter-apk/*
+            CHANGELOG.md
+            LICENSE

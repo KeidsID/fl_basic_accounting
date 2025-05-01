@@ -51,3 +51,6 @@ app.*.map.json
 *.g.dart
 *.freezed.dart
 service_locator.config.dart
+
+# secrets (release configs, etc)
+secrets/
