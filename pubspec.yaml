@@ -44,7 +44,7 @@ dev_dependencies:
 
   # data class
   freezed: ^3.0.4
-  json_serializable: ^6.9.4
+  json_serializable: ^6.9.5
 
   # deps inject
   injectable_generator: ^2.7.0
