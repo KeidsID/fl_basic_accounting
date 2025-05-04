@@ -12,6 +12,6 @@ class GetProjectsUseCase implements UseCase<Stream<List<Project>>, void> {
 
   @override
   Stream<List<Project>> execute([void params]) {
-    return _projectsRepository.readAllAsStream();
+    return _projectsRepository.readAllStream();
   }
 }

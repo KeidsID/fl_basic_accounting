@@ -1,26 +1,29 @@
 import "package:app/domain/entities.dart";
 
 /// Base class for repositories that may need CRUD methods.
-abstract class CrudRepository<T extends Entity> {
+abstract class CrudRepository<T extends Entity, ReadQuery> {
   const CrudRepository();
 
   /// Store [entity] into database.
   Future<T> create(T entity);
 
   /// Return entity by [id].
-  Future<T?> readById(int id);
+  Future<T?> readById(int id, [ReadQuery query]);
 
   /// Return list of entities from database.
-  Future<List<T>> readAll();
+  Future<List<T>> readAll([ReadQuery query]);
+
+  /// [readAll] that returns a [Stream] instead of [Future].
+  Stream<List<T>> readAllStream([ReadQuery query]);
 
   /// Update entity with [updatedEntity] values.
   ///
-  /// Make use of [Entity.copyWith] method to make sure the [updatedEntity] to
-  /// safely clone the [Entity.id] for update purpose.
+  /// Make use of `copyWith` method without modify the [Entity.id] to safely
+  /// update the desired entity.
   Future<T?> update(T updatedEntity);
 
   /// Delete entity by [id].
   ///
   /// Return deleted entity.
-  Future<T?> delete(int id);
+  Future<T?> deleteById(int id);
 }

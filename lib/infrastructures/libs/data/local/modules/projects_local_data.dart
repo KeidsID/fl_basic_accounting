@@ -26,12 +26,8 @@ class ProjectsLocalData extends DatabaseAccessor<AppDatabase>
     );
   }
 
-  Future<List<ProjectModel>> readAll() async {
-    return projects.select().get();
-  }
-
-  Stream<List<ProjectModel>> readAllAsStream() {
-    return projects.select().watch();
+  SimpleSelectStatement<$ProjectsTable, ProjectModel> readAll() {
+    return projects.select();
   }
 
   Future<ProjectModel?> readById(int id) async {

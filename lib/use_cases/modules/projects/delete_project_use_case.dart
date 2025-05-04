@@ -12,6 +12,6 @@ class DeleteProjectUseCase implements UseCase<Future<Project?>, int> {
 
   @override
   Future<Project?> execute(int projectId) {
-    return _projectsRepository.delete(projectId);
+    return _projectsRepository.deleteById(projectId);
   }
 }

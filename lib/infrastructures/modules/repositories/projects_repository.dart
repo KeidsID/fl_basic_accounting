@@ -21,24 +21,24 @@ final class ProjectsRepositoryImpl implements ProjectsRepository {
   }
 
   @override
-  Future<Project?> delete(int id) async {
-    final result = await _projectsLocalData.deleteById(id);
+  Future<Project?> readById(int id, [void query]) async {
+    final result = await _projectsLocalData.readById(id);
 
     return result?.toEntity();
   }
 
   @override
-  Future<List<Project>> readAll() async {
-    final results = await _projectsLocalData.readAll();
+  Future<List<Project>> readAll([void query]) async {
+    final results = await _projectsLocalData.readAll().get();
 
     return results.map((e) => e.toEntity()).toList();
   }
 
   @override
-  Future<Project?> readById(int id) async {
-    final result = await _projectsLocalData.readById(id);
-
-    return result?.toEntity();
+  Stream<List<Project>> readAllStream([void query]) {
+    return _projectsLocalData.readAll().watch().map(
+      (results) => results.map((e) => e.toEntity()).toList(),
+    );
   }
 
   @override
@@ -55,9 +55,9 @@ final class ProjectsRepositoryImpl implements ProjectsRepository {
   }
 
   @override
-  Stream<List<Project>> readAllAsStream() {
-    return _projectsLocalData.readAllAsStream().map(
-      (results) => results.map((e) => e.toEntity()).toList(),
-    );
+  Future<Project?> deleteById(int id) async {
+    final result = await _projectsLocalData.deleteById(id);
+
+    return result?.toEntity();
   }
 }
