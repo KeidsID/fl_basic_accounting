@@ -1,6 +1,9 @@
 import "package:app/domain/entities.dart";
 
 /// Base class for repositories that may need CRUD methods.
+///
+/// With [ReadQuery] generic type, you can use it to pass custom query on
+/// read methods for sorting, filtering, etc.
 abstract class CrudRepository<T extends Entity, ReadQuery> {
   const CrudRepository();
 

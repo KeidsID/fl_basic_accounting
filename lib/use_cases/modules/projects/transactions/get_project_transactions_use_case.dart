@@ -1,0 +1,59 @@
+import "package:app/domain/entities.dart";
+import "package:freezed_annotation/freezed_annotation.dart";
+import "package:injectable/injectable.dart";
+
+import "package:app/domain/repositories.dart";
+import "package:app/use_cases/libs/types.dart";
+
+part "get_project_transactions_use_case.freezed.dart";
+
+@singleton
+class GetProjectTransactionsUseCase
+    implements
+        UseCase<
+          Stream<List<ProjectTransaction>>,
+          GetProjectTransactionsUseCaseOptions
+        > {
+  final ProjectTransactionsRepository _projectTransactionsRepository;
+
+  const GetProjectTransactionsUseCase(this._projectTransactionsRepository);
+
+  @override
+  Stream<List<ProjectTransaction>> execute(
+    GetProjectTransactionsUseCaseOptions options,
+  ) {
+    return _projectTransactionsRepository
+        .readAllStream(
+          ProjectTrannsactionsRepositoryReadQuery(
+            startDate: options.startDate,
+            endDate: options.endDate,
+          ),
+        )
+        .asyncMap((results) async {
+          if (results.isEmpty) return results;
+
+          final [first, ...rest] = results;
+
+          final (:cashIn, :cashOut) = await _projectTransactionsRepository
+              .getProjectTotalCash(
+                first.projectId,
+                endDate: first.transactionDate.subtract(Duration(days: 1)),
+              );
+          final previousTotalCash = cashIn - cashOut;
+
+          return [
+            first.copyWith(previousCashTotal: previousTotalCash),
+            ...rest,
+          ];
+        });
+  }
+}
+
+@freezed
+sealed class GetProjectTransactionsUseCaseOptions
+    with _$GetProjectTransactionsUseCaseOptions {
+  const factory GetProjectTransactionsUseCaseOptions({
+    DateTime? startDate,
+    DateTime? endDate,
+  }) = _GetProjectTransactionsUseCaseOptions;
+}

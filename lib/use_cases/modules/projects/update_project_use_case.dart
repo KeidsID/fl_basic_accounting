@@ -6,9 +6,9 @@ import "package:app/use_cases/libs/types.dart";
 
 @singleton
 class UpdateProjectUseCase implements UseCase<Future<Project?>, Project> {
-  const UpdateProjectUseCase(this._projectsRepository);
-
   final ProjectsRepository _projectsRepository;
+
+  const UpdateProjectUseCase(this._projectsRepository);
 
   @override
   Future<Project?> execute(Project updatedEntity) {

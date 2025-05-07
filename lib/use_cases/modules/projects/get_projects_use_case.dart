@@ -6,9 +6,9 @@ import "package:app/use_cases/libs/types.dart";
 
 @singleton
 class GetProjectsUseCase implements UseCase<Stream<List<Project>>, void> {
-  const GetProjectsUseCase(this._projectsRepository);
-
   final ProjectsRepository _projectsRepository;
+
+  const GetProjectsUseCase(this._projectsRepository);
 
   @override
   Stream<List<Project>> execute([void params]) {

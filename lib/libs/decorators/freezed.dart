@@ -42,3 +42,9 @@ final class NullableDateTimeProp implements JsonConverter<DateTime?, String?> {
     return object?.toIso8601String();
   }
 }
+
+/// Makes the annotated property ignored by json serialization.
+const ignoreJsonSerializable = JsonKey(
+  includeFromJson: false,
+  includeToJson: false,
+);

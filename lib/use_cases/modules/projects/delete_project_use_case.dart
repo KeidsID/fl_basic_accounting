@@ -6,9 +6,9 @@ import "package:app/use_cases/libs/types.dart";
 
 @singleton
 class DeleteProjectUseCase implements UseCase<Future<Project?>, int> {
-  const DeleteProjectUseCase(this._projectsRepository);
-
   final ProjectsRepository _projectsRepository;
+
+  const DeleteProjectUseCase(this._projectsRepository);
 
   @override
   Future<Project?> execute(int projectId) {
