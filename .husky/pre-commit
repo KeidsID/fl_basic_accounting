@@ -9,4 +9,4 @@ d() {
   dart "$@" || fvm dart "$@"
 }
 
-fl analyze && d run custom_lint
+fl analyze && d run custom_lint && fl test

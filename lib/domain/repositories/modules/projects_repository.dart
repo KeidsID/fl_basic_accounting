@@ -14,7 +14,7 @@ abstract interface class ProjectsRepository
 sealed class ProjectsRepositoryReadQuery with _$ProjectsRepositoryReadQuery {
   const factory ProjectsRepositoryReadQuery({
     /// Whether to include [Project.totalCash] in the results.
-    /// 
+    ///
     /// Defaults to `true`.
     @Default(true) bool includeTotalCash,
   }) = _ProjectsRepositoryReadQuery;

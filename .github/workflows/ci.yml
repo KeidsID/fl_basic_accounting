@@ -72,3 +72,5 @@ jobs:
           flutter analyze || dart analyze
           dart run custom_lint
 
+      - name: 🧪 Code Testing
+        run: flutter test
