@@ -23,7 +23,8 @@ class GetProjectTransactionsUseCase
     GetProjectTransactionsUseCaseOptions options,
   ) {
     return _projectTransactionsRepository
-        .readAllStream(
+        .getProjectTransactions(
+          options.projectId,
           ProjectTrannsactionsRepositoryReadQuery(
             startDate: options.startDate,
             endDate: options.endDate,
@@ -37,7 +38,9 @@ class GetProjectTransactionsUseCase
           final (:cashIn, :cashOut) = await _projectTransactionsRepository
               .getProjectTotalCash(
                 first.projectId,
-                endDate: first.transactionDate.subtract(Duration(days: 1)),
+                ProjectTrannsactionsRepositoryReadQuery(
+                  endDate: first.transactionDate.subtract(Duration(days: 1)),
+                ),
               );
           final previousTotalCash = cashIn - cashOut;
 
@@ -53,6 +56,7 @@ class GetProjectTransactionsUseCase
 sealed class GetProjectTransactionsUseCaseOptions
     with _$GetProjectTransactionsUseCaseOptions {
   const factory GetProjectTransactionsUseCaseOptions({
+    required int projectId,
     DateTime? startDate,
     DateTime? endDate,
   }) = _GetProjectTransactionsUseCaseOptions;

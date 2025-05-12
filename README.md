@@ -39,7 +39,7 @@ without the complexity of a full accounting system.
 
 ## 💡 Development Plan
 
-- [ ] Project Creation.
+- [x] ~~Project Creation.~~
 
 - [ ] Recording transactions on the project.
 

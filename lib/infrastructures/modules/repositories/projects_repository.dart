@@ -12,52 +12,45 @@ final class ProjectsRepositoryImpl implements ProjectsRepository {
 
   @override
   Future<Project> create(Project entity) async {
-    final result = await _projectsLocalData.create(
-      name: entity.name,
-      description: entity.description,
+    return _projectsLocalData.create(entity);
+  }
+
+  @override
+  Future<Project?> readById(
+    int id, [
+    ProjectsRepositoryReadQuery query = const ProjectsRepositoryReadQuery(),
+  ]) async {
+    final result = await _projectsLocalData.readById(
+      id,
+      includeTotalCash: query.includeTotalCash,
     );
 
-    return result.toEntity();
+    return result;
   }
 
   @override
-  Future<Project?> readById(int id, [void query]) async {
-    final result = await _projectsLocalData.readById(id);
-
-    return result?.toEntity();
+  Future<List<Project>> readAll([
+    ProjectsRepositoryReadQuery query = const ProjectsRepositoryReadQuery(),
+  ]) {
+    return _projectsLocalData
+        .readAll(includeTotalCash: query.includeTotalCash)
+        .get();
   }
 
   @override
-  Future<List<Project>> readAll([void query]) async {
-    final results = await _projectsLocalData.readAll().get();
-
-    return results.map((e) => e.toEntity()).toList();
-  }
-
-  @override
-  Stream<List<Project>> readAllStream([void query]) {
-    return _projectsLocalData.readAll().watch().map(
-      (results) => results.map((e) => e.toEntity()).toList(),
-    );
+  Stream<List<Project>> readAllStream([
+    ProjectsRepositoryReadQuery query = const ProjectsRepositoryReadQuery(),
+  ]) {
+    return _projectsLocalData
+        .readAll(includeTotalCash: query.includeTotalCash)
+        .watch();
   }
 
   @override
   Future<Project?> update(Project updatedEntity) async {
-    final Project(:id, :name, :description) = updatedEntity;
-
-    final result = await _projectsLocalData.updateById(
-      id,
-      name: name,
-      description: description,
-    );
-
-    return result?.toEntity();
+    return _projectsLocalData.updateProject(updatedEntity);
   }
 
   @override
-  Future<Project?> deleteById(int id) async {
-    final result = await _projectsLocalData.deleteById(id);
-
-    return result?.toEntity();
-  }
+  Future<Project?> deleteById(int id) => _projectsLocalData.deleteById(id);
 }
