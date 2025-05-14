@@ -6,7 +6,7 @@ import "package:app/use_cases/libs/types.dart";
 
 @singleton
 class CreateProjectTransactionUseCase
-    implements UseCase<Future<ProjectTransaction>, ProjectTransaction> {
+    implements UseCase<ProjectTransaction, ProjectTransaction> {
   final ProjectTransactionsRepository _projectTransactionsRepository;
 
   const CreateProjectTransactionUseCase(this._projectTransactionsRepository);

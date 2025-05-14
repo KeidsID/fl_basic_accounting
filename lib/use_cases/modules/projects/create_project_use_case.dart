@@ -5,7 +5,7 @@ import "package:app/domain/repositories.dart";
 import "package:app/use_cases/libs/types.dart";
 
 @singleton
-class CreateProjectUseCase implements UseCase<Future<Project>, Project> {
+class CreateProjectUseCase implements UseCase<Project, Project> {
   final ProjectsRepository _projectsRepository;
 
   const CreateProjectUseCase(this._projectsRepository);

@@ -10,8 +10,8 @@ part "get_project_transactions_use_case.freezed.dart";
 @singleton
 class GetProjectTransactionsUseCase
     implements
-        UseCase<
-          Stream<List<ProjectTransaction>>,
+        StreamUseCase<
+          List<ProjectTransaction>,
           GetProjectTransactionsUseCaseOptions
         > {
   final ProjectTransactionsRepository _projectTransactionsRepository;
