@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 
 import "package:app/domain/entities.dart";
+import "package:app/libs/extensions.dart";
 
 class ProjectCard extends StatelessWidget {
   final Project project;
@@ -11,19 +12,23 @@ class ProjectCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Project(:name, :description) = project;
+    final Project(:name, :description, :totalCash) = project;
 
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
 
-    final title = Text(
+    final titleWidget = Text(
       name,
       style: textTheme.headlineMedium,
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
     );
-    final subtitle = Text(
-      description ?? "No description",
+    final cashWidget = Text(
+      "\$${totalCash.toStringAsFixed(2)}",
+      style: textTheme.titleMedium,
+    );
+    final descriptionWidget = Text(
+      description.fallbackWith("No description"),
       style: textTheme.bodyMedium?.copyWith(
         color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
       ),
@@ -41,7 +46,7 @@ class ProjectCard extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             spacing: 8.0,
-            children: [title, subtitle],
+            children: [titleWidget, cashWidget, descriptionWidget],
           ),
         ),
       ),

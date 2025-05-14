@@ -1,11 +1,13 @@
 import "package:fl_utilities/fl_utilities.dart";
 import "package:flutter/material.dart";
+import "package:flutter_hooks/flutter_hooks.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:go_router/go_router.dart";
 
 import "package:app/domain/entities.dart";
 import "package:app/interfaces/libs/providers.dart";
 import "package:app/interfaces/libs/widgets.dart";
+import "package:app/libs/extensions.dart";
 
 const projectDetailDeco = TypedGoRoute<ProjectDetailRoute>(
   path: "view/:projectId",
@@ -83,7 +85,7 @@ class ProjectDetailScreen extends ConsumerWidget {
   }
 }
 
-class _ProjectScreen extends StatelessWidget {
+class _ProjectScreen extends HookWidget {
   final Project project;
 
   final VoidCallback? onEdit;
@@ -95,18 +97,29 @@ class _ProjectScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final Project(:name, :description) = project;
 
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
+    final appBar = AppBar(title: Text(name));
 
-    final appBar = SliverAppBar(title: Text('"$name" Project'));
-
-    final children = <Widget>[
-      Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        spacing: 16.0,
-        children: [
-          Text(description ?? "No project description."),
+    final slivers = <Widget>[
+      SliverSectionCard(
+        margin: EdgeInsets.all(24.0).copyWith(bottom: 0.0),
+        header: Text("Project Details"),
+        contents: [
+          Table(
+            columnWidths: {
+              0: FixedColumnWidth(120.0),
+              1: FixedColumnWidth(16.0),
+            },
+            children: [
+              TableRow(children: [Text("Name"), Text(":"), Text(name)]),
+              TableRow(
+                children: [
+                  Text("Description"),
+                  Text(":"),
+                  Text(description.fallbackWith("No project description.")),
+                ],
+              ),
+            ],
+          ),
           OutlinedButton.icon(
             onPressed: onEdit,
             label: Text("Edit Details"),
@@ -114,14 +127,9 @@ class _ProjectScreen extends StatelessWidget {
           ),
         ],
       ),
-
-      // Danger Zone section
-      Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        spacing: 16.0,
-        children: [
-          Text("Danger Zone", style: textTheme.titleLarge),
+      SliverSectionCard(
+        header: Text("Danger Zone"),
+        contents: [
           OutlinedErrorButton.icon(
             onPressed: onDelete,
             label: Text("Delete Project"),
@@ -131,20 +139,6 @@ class _ProjectScreen extends StatelessWidget {
       ),
     ];
 
-    return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          appBar,
-          SliverPadding(
-            padding: const EdgeInsets.all(16.0),
-            sliver: SliverList.separated(
-              itemCount: children.length,
-              itemBuilder: (_, index) => children[index],
-              separatorBuilder: (_, __) => const Divider(),
-            ),
-          ),
-        ],
-      ),
-    );
+    return Scaffold(appBar: appBar, body: CustomScrollView(slivers: slivers));
   }
 }

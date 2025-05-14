@@ -22,7 +22,12 @@ part "database.g.dart";
   ],
 )
 class AppDatabase extends _$AppDatabase {
+  /// Create [AppDatabase] instance.
   AppDatabase([QueryExecutor? e]) : super(e ?? _openConnection());
+
+  /// Create [AppDatabase] instance with [driftDatabase].
+  @factoryMethod
+  AppDatabase.create() : super(_openConnection());
 
   @override
   int get schemaVersion => 2;
@@ -102,7 +107,9 @@ Future<void> _debugSeeds(AppDatabase db, OpeningDetails details) async {
 
   if (isSeeded) return;
 
-  db.transaction(() async {
+  debugPrint("[AppDatabase] ~ Seeding dummy data into database");
+
+  await db.transaction(() async {
     await db.projects.insertAll(
       [
         "Project A",
@@ -125,6 +132,8 @@ Future<void> _debugSeeds(AppDatabase db, OpeningDetails details) async {
       );
     }
   });
+
+  debugPrint("[AppDatabase] ~ Dummy data seeded");
 }
 
 List<ProjectTransaction> _getDummyProjectTransactions(int projectId) {
