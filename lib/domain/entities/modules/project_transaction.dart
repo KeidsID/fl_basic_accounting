@@ -37,7 +37,7 @@ final class ProjectTransaction extends Entity with _$ProjectTransaction {
   /// Previous cash total before this transaction date.
   @ignoreJsonSerializable
   @override
-  final double previousCashTotal;
+  final double previousTotalCash;
 
   ProjectTransaction({
     super.id,
@@ -49,15 +49,15 @@ final class ProjectTransaction extends Entity with _$ProjectTransaction {
     required this.description,
     DateTime? transactionDate,
     this.tags = const <ProjectTransactionTag>[],
-    this.previousCashTotal = 0.0,
+    this.previousTotalCash = 0.0,
   }) : assert(amount != 0, "Transaction amount should not be zero.") {
     final now = DateTime.now().toUtc().toMidnight();
 
     this.transactionDate = transactionDate?.toUtc().toMidnight() ?? now;
   }
 
-  /// Sum of [previousCashTotal] and [amount].
-  double get currentCashTotal => previousCashTotal + amount;
+  /// Sum of [previousTotalCash] and [amount].
+  double get currentTotalCash => previousTotalCash + amount;
 
   /// Indicates if the transaction is a cash deposit.
   ///

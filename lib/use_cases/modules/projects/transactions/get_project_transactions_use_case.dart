@@ -1,8 +1,7 @@
-import "package:app/domain/entities.dart";
-import "package:collection/collection.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
 import "package:injectable/injectable.dart";
 
+import "package:app/domain/entities.dart";
 import "package:app/domain/repositories.dart";
 import "package:app/use_cases/libs/types.dart";
 
@@ -46,7 +45,7 @@ class GetProjectTransactionsUseCase
           final previousTotalCash = cashIn - cashOut;
 
           return [
-            first.copyWith(previousCashTotal: previousTotalCash),
+            first.copyWith(previousTotalCash: previousTotalCash),
             ...rest,
           ];
         });

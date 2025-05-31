@@ -6,13 +6,13 @@ extension ProjectTransactionListX on List<ProjectTransaction> {
   /// Return a new list with calculated cash total.
   ///
   /// Make sure the first item already fecthed the
-  /// [ProjectTransaction.previousCashTotal]
+  /// [ProjectTransaction.previousTotalCash]
   List<ProjectTransaction> calculateCashTotal() {
     return mapIndexed((index, transaction) {
       if (index == 0) return transaction;
 
       return transaction.copyWith(
-        previousCashTotal: this[index - 1].currentCashTotal,
+        previousTotalCash: this[index - 1].currentTotalCash,
       );
     }).toList();
   }

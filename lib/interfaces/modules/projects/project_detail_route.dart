@@ -1,9 +1,8 @@
-import "package:collection/collection.dart";
-import "package:fl_chart/fl_chart.dart";
 import "package:fl_utilities/fl_utilities.dart";
 import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:go_router/go_router.dart";
+import "package:intl/intl.dart";
 
 import "package:app/domain/entities.dart";
 import "package:app/interfaces/libs/providers.dart";
@@ -11,7 +10,6 @@ import "package:app/interfaces/libs/widgets.dart";
 import "package:app/libs/enums.dart";
 import "package:app/libs/extensions.dart";
 import "package:app/libs/types.dart";
-import "package:intl/intl.dart";
 
 const projectDetailDeco = TypedGoRoute<ProjectDetailRoute>(
   path: "view/:projectId",
@@ -204,20 +202,20 @@ class _ProjectScreenState extends ConsumerState<_ProjectScreen> {
           header: Text("Total Cash"),
           contents: [
             Text(
-              "\$ ${totalCash.toStringAsFixed(2)} ",
+              NumberFormat.compactCurrency(symbol: "\$").format(totalCash),
               style: textTheme.titleLarge,
             ),
             Text.rich(
               TextSpan(
                 children: [
                   TextSpan(
-                    text: "\$ ${totalCashIn.toStringAsFixed(2)}",
+                    text: "${NumberFormat.compact().format(totalCashIn)} ",
                     style: textTheme.bodyMedium?.apply(
                       color: colorScheme.primary,
                     ),
                   ),
                   TextSpan(
-                    text: " - \$ ${(totalCashOut * -1).toStringAsFixed(2)}",
+                    text: NumberFormat.compact().format(totalCashOut),
                     style: textTheme.bodyMedium?.apply(
                       color: colorScheme.error,
                     ),

@@ -8,7 +8,12 @@ import "package:intl/intl.dart";
 import "package:app/domain/entities/modules.dart";
 import "package:app/libs/extensions.dart";
 
+typedef CashflowChartXAxisLabelBuilder =
+    String Function(ProjectTransaction transaction);
+
 /// A widget that display chart of [transactions] cash total.
+///
+/// So the chart Y axis will be [ProjectTransaction.currentTotalCash].
 class CashflowChart extends HookWidget {
   final List<ProjectTransaction> transactions;
 
@@ -22,14 +27,20 @@ class CashflowChart extends HookWidget {
   /// Typically a [Text] widget.
   final Widget? header;
 
+  /// Custom label on the X axis of the chart.
+  ///
+  /// Default to formatted [ProjectTransaction.transactionDate].
+  final CashflowChartXAxisLabelBuilder? xAxisLabelBuilder;
+
   /// Widget to build on [transactions] empty.
   final WidgetBuilder? fallbackBuilder;
 
   const CashflowChart(
     this.transactions, {
     super.key,
-    this.height = 400.0,
+    this.height = 300.0,
     this.header,
+    this.xAxisLabelBuilder,
     this.fallbackBuilder,
   });
 
@@ -43,7 +54,7 @@ class CashflowChart extends HookWidget {
       if (calculatedTransactions.isEmpty) return <FlSpot>[];
 
       return calculatedTransactions.mapIndexed((index, transaction) {
-        return FlSpot(index.toDouble(), transaction.currentCashTotal);
+        return FlSpot(index.toDouble(), transaction.currentTotalCash);
       }).toList();
     }, [calculatedTransactions]);
 
@@ -76,7 +87,7 @@ class CashflowChart extends HookWidget {
             LineChartData(
               minX: minX,
               maxX: maxX,
-              minY: minY,
+              minY: minY / 0.2,
               maxY: maxY * 1.5,
               lineBarsData: [LineChartBarData(spots: spots, isCurved: true)],
               lineTouchData: LineTouchData(
@@ -96,7 +107,7 @@ class CashflowChart extends HookWidget {
                         children: [
                           TextSpan(
                             text:
-                                " (${NumberFormat.compact().format(transaction.previousCashTotal)}",
+                                " (${NumberFormat.compact().format(transaction.previousTotalCash)} ",
                           ),
                           TextSpan(
                             text:
@@ -104,7 +115,9 @@ class CashflowChart extends HookWidget {
                                 NumberFormat.compact().format(amount),
                             style: textTheme.bodyMedium?.copyWith(
                               color:
-                                  amount.isNegative ? colorScheme.error : null,
+                                  amount.isNegative
+                                      ? colorScheme.error
+                                      : colorScheme.primary,
                             ),
                           ),
                           TextSpan(
@@ -129,12 +142,16 @@ class CashflowChart extends HookWidget {
                         return SizedBox.shrink();
                       }
 
-                      final date =
-                          calculatedTransactions[spotX.round()].transactionDate;
+                      final transaction = calculatedTransactions[spotX.round()];
 
                       return SideTitleWidget(
                         meta: meta,
-                        child: Text(DateFormat.yMMMMd().format(date)),
+                        child: Text(
+                          xAxisLabelBuilder?.call(transaction) ??
+                              DateFormat.yMMMMd().format(
+                                transaction.transactionDate,
+                              ),
+                        ),
                       );
                     },
                   ),

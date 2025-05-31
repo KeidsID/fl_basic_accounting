@@ -38,6 +38,7 @@ class ProjectTransactionsLocalData extends DatabaseAccessor<AppDatabase>
   }) async* {
     final transactionsQuery = projectTransactions.select();
     if (whereFilter != null) transactionsQuery.where(whereFilter);
+    transactionsQuery.orderBy([(t) => OrderingTerm.asc(t.transactionDate)]);
 
     final transactionsStream =
         transactionsQuery.map((row) => row.toEntity()).watch();

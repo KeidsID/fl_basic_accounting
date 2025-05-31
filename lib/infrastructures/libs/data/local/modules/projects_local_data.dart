@@ -57,7 +57,7 @@ class ProjectsLocalData extends DatabaseAccessor<AppDatabase>
         ).sum();
 
     query.addColumns([totalCashInExp, totalCashOutExp]);
-    query.groupBy(p.$columns);
+    query.groupBy([p.id]);
 
     if (whereFilter != null) {
       query.where(whereFilter(p, pt));

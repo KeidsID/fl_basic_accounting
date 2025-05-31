@@ -41,7 +41,7 @@ final class Project extends Entity with _$Project {
        assert(totalCashOut <= 0, "totalCashOut should be negative");
 
   /// Sum of all [ProjectTransaction.amount] for this project.
-  double get totalCash => totalCashIn - (totalCashOut * -1);
+  double get totalCash => totalCashIn + totalCashOut;
 
   factory Project.fromJson(Map<String, dynamic> json) =>
       _$ProjectFromJson(json);
