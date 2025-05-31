@@ -1,4 +1,5 @@
 import "package:app/domain/entities.dart";
+import "package:collection/collection.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
 import "package:injectable/injectable.dart";
 

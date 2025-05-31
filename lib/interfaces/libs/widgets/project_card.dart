@@ -24,7 +24,7 @@ class ProjectCard extends StatelessWidget {
       overflow: TextOverflow.ellipsis,
     );
     final cashWidget = Text(
-      "\$${totalCash.toStringAsFixed(2)}",
+      "\$ ${totalCash.toStringAsFixed(2)}",
       style: textTheme.titleMedium,
     );
     final descriptionWidget = Text(

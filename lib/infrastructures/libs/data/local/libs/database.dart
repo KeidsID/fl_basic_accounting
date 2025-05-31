@@ -4,6 +4,8 @@ import "package:flutter/foundation.dart";
 import "package:injectable/injectable.dart";
 
 import "package:app/domain/entities.dart";
+import "package:app/libs/extensions.dart";
+
 import "database.steps.dart";
 import "tables.dart";
 
@@ -28,6 +30,17 @@ class AppDatabase extends _$AppDatabase {
   /// Create [AppDatabase] instance with [driftDatabase].
   @factoryMethod
   AppDatabase.create() : super(_openConnection());
+
+  static QueryExecutor _openConnection() {
+    return driftDatabase(
+      name: "app_database",
+      native: const DriftNativeOptions(),
+      web: DriftWebOptions(
+        sqlite3Wasm: Uri.parse("sqlite3.wasm"),
+        driftWorker: Uri.parse("drift_worker.dart.js"),
+      ),
+    );
+  }
 
   @override
   int get schemaVersion => 2;
@@ -81,7 +94,7 @@ class AppDatabase extends _$AppDatabase {
           }
           await m.createAll();
 
-          await _debugSeeds(this, details);
+          await _debugSeeds();
         }
       }
 
@@ -89,117 +102,144 @@ class AppDatabase extends _$AppDatabase {
     },
   );
 
-  static QueryExecutor _openConnection() {
-    return driftDatabase(
-      name: "app_database",
-      native: const DriftNativeOptions(),
-      web: DriftWebOptions(
-        sqlite3Wasm: Uri.parse("sqlite3.wasm"),
-        driftWorker: Uri.parse("drift_worker.dart.js"),
-      ),
-    );
-  }
-}
+  /// Seeds the database with initial data for debug purpose.
+  Future<void> _debugSeeds() async {
+    final isSeeded = (await (projects.select()..limit(1)).get()).isNotEmpty;
 
-/// Seeds the database with initial data for debug purpose.
-Future<void> _debugSeeds(AppDatabase db, OpeningDetails details) async {
-  final isSeeded = (await (db.projects.select()..limit(1)).get()).isNotEmpty;
+    if (isSeeded) return;
 
-  if (isSeeded) return;
+    debugPrint("[AppDatabase] ~ Seeding dummy data into database");
 
-  debugPrint("[AppDatabase] ~ Seeding dummy data into database");
-
-  await db.transaction(() async {
-    await db.projects.insertAll(
-      [
-        "Project A",
-        "Project B",
-        "Project C",
-        "Project D",
-        "Project E",
-      ].map((e) => ProjectsCompanion.insert(name: e)),
-    );
-
-    final seededProjects = await db.projects.select().get();
-
-    for (var project in seededProjects) {
-      final dummyTransactions = _getDummyProjectTransactions(project.id);
-
-      await db.projectTransactions.insertAll(
-        dummyTransactions.map(
-          (e) => ProjectTransactionModelX.fromEntity(e).toValidCompanion(),
-        ),
+    await transaction(() async {
+      await projects.insertAll(
+        [
+          "Project A",
+          "Project B",
+          "Project C",
+          "Project D",
+          "Project E",
+        ].map((e) => ProjectsCompanion.insert(name: e)),
       );
-    }
-  });
 
-  debugPrint("[AppDatabase] ~ Dummy data seeded");
+      final seededProjects = await projects.select().get();
+
+      for (var project in seededProjects) {
+        final dummyTransactions = _getDummyProjectTransactions(project.id);
+
+        await projectTransactions.insertAll(
+          dummyTransactions.map(
+            (e) => ProjectTransactionModelX.fromEntity(e).toValidCompanion(),
+          ),
+        );
+      }
+    });
+
+    debugPrint("[AppDatabase] ~ Dummy data seeded");
+  }
 }
 
 List<ProjectTransaction> _getDummyProjectTransactions(int projectId) {
-  final now = DateTime.now().toUtc();
-
-  if (projectId % 2 == 0) {
-    return [
-      ProjectTransaction(
-        projectId: projectId,
-        amount: 500,
-        transactionType: ProjectTransactionType.equity,
-        description: "Cash Deposit",
-        transactionDate: now,
-      ),
-      ProjectTransaction(
-        projectId: projectId,
-        amount: 150,
-        transactionType: ProjectTransactionType.asset,
-        description: "Equipment Purchase",
-        transactionDate: now.add(Duration(days: 1)),
-      ),
-      ProjectTransaction(
-        projectId: projectId,
-        amount: -200,
-        transactionType: ProjectTransactionType.operation,
-        description: "Office Supplies Expense",
-        transactionDate: now.add(Duration(days: 1)),
-      ),
-      ProjectTransaction(
-        projectId: projectId,
-        amount: 300,
-        transactionType: ProjectTransactionType.operation,
-        description: "Service Revenue",
-        transactionDate: now.add(Duration(days: 7)),
-      ),
-    ];
-  }
+  final now = DateTime.now().toUtc().toMidnight();
+  final last31DaysAgo = now.subtract(Duration(days: 31));
 
   return [
     ProjectTransaction(
       projectId: projectId,
-      amount: 1000,
-      transactionType: ProjectTransactionType.liability,
-      description: "Loan",
-      transactionDate: now,
+      amount: 500,
+      transactionType: ProjectTransactionType.equity,
+      description: "Initial Cash Deposit",
+      transactionDate: last31DaysAgo,
     ),
     ProjectTransaction(
       projectId: projectId,
-      amount: -250,
+      amount: 150,
+      transactionType: ProjectTransactionType.asset,
+      description: "Computer Equipment Purchase",
+      transactionDate: last31DaysAgo.add(Duration(days: 1)),
+    ),
+    ProjectTransaction(
+      projectId: projectId,
+      amount: -200,
       transactionType: ProjectTransactionType.operation,
-      description: "Marketing Expense",
-      transactionDate: now.add(Duration(days: 1)),
+      description: "Monthly Office Supplies Expense",
+      transactionDate: last31DaysAgo.add(Duration(days: 1)),
+    ),
+    ProjectTransaction(
+      projectId: projectId,
+      amount: 300,
+      transactionType: ProjectTransactionType.operation,
+      description: "Consulting Service Revenue",
+      transactionDate: last31DaysAgo.add(Duration(days: 6)),
+    ),
+    ProjectTransaction(
+      projectId: projectId,
+      amount: 1000,
+      transactionType: ProjectTransactionType.equity,
+      description: "Additional Investor Funding",
+      transactionDate: last31DaysAgo.add(Duration(days: 8)),
+    ),
+    ProjectTransaction(
+      projectId: projectId,
+      amount: -50,
+      transactionType: ProjectTransactionType.operation,
+      description: "Utility Bill Payment",
+      transactionDate: last31DaysAgo.add(Duration(days: 10)),
+    ),
+    ProjectTransaction(
+      projectId: projectId,
+      amount: 750,
+      transactionType: ProjectTransactionType.asset,
+      description: "Vehicle Acquisition",
+      transactionDate: last31DaysAgo.add(Duration(days: 12)),
+    ),
+    ProjectTransaction(
+      projectId: projectId,
+      amount: -120,
+      transactionType: ProjectTransactionType.operation,
+      description: "Marketing Campaign Expense",
+      transactionDate: last31DaysAgo.add(Duration(days: 15)),
+    ),
+    ProjectTransaction(
+      projectId: projectId,
+      amount: 600,
+      transactionType: ProjectTransactionType.operation,
+      description: "Product Sales Revenue",
+      transactionDate: last31DaysAgo.add(Duration(days: 18)),
     ),
     ProjectTransaction(
       projectId: projectId,
       amount: -300,
-      transactionType: ProjectTransactionType.asset,
-      description: "Vehicle Purchase",
-      transactionDate: now.add(Duration(days: 2)),
+      transactionType: ProjectTransactionType.equity,
+      description: "Owner's Drawing",
+      transactionDate: last31DaysAgo.add(Duration(days: 20)),
+    ),
+    ProjectTransaction(
+      projectId: projectId,
+      amount: 250,
+      transactionType: ProjectTransactionType.operation,
+      description: "Website Development Service",
+      transactionDate: last31DaysAgo.add(Duration(days: 22)),
+    ),
+    ProjectTransaction(
+      projectId: projectId,
+      amount: -80,
+      transactionType: ProjectTransactionType.operation,
+      description: "Travel Expense",
+      transactionDate: last31DaysAgo.add(Duration(days: 25)),
     ),
     ProjectTransaction(
       projectId: projectId,
       amount: 400,
+      transactionType: ProjectTransactionType.equity,
+      description: "Loan from Bank",
+      transactionDate: last31DaysAgo.add(Duration(days: 28)),
+    ),
+    ProjectTransaction(
+      projectId: projectId,
+      amount: -100,
       transactionType: ProjectTransactionType.operation,
-      description: "Product Sales Revenue",
-      transactionDate: now.add(Duration(days: 8)),
+      description: "Software Subscription Fee",
+      transactionDate: last31DaysAgo.add(Duration(days: 30)),
     ),
   ];
 }

@@ -1,13 +1,17 @@
+import "package:collection/collection.dart";
+import "package:fl_chart/fl_chart.dart";
 import "package:fl_utilities/fl_utilities.dart";
 import "package:flutter/material.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:go_router/go_router.dart";
 
 import "package:app/domain/entities.dart";
 import "package:app/interfaces/libs/providers.dart";
 import "package:app/interfaces/libs/widgets.dart";
+import "package:app/libs/enums.dart";
 import "package:app/libs/extensions.dart";
+import "package:app/libs/types.dart";
+import "package:intl/intl.dart";
 
 const projectDetailDeco = TypedGoRoute<ProjectDetailRoute>(
   path: "view/:projectId",
@@ -32,12 +36,7 @@ class ProjectDetailScreen extends ConsumerWidget {
   VoidCallback _onEdit(BuildContext context, Project project) {
     return () => showDialog(
       context: context,
-      builder: (context) {
-        return ProjectFormDialog(
-          variant: ProjectFormDialogVariant.edit,
-          project: project,
-        );
-      },
+      builder: (context) => ProjectFormDialog(project: project),
     );
   }
 
@@ -53,7 +52,7 @@ class ProjectDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final project = ref.watch(projectDetailProvider(projectId));
 
-    if (project == null) return _buildNotFoundScreen(context);
+    if (project == null) return const _ProjectNotFoundScreen();
 
     return _ProjectScreen(
       project,
@@ -61,8 +60,13 @@ class ProjectDetailScreen extends ConsumerWidget {
       onDelete: _onDelete(context, ref),
     );
   }
+}
 
-  Widget _buildNotFoundScreen(BuildContext context) {
+class _ProjectNotFoundScreen extends StatelessWidget {
+  const _ProjectNotFoundScreen();
+
+  @override
+  Widget build(BuildContext context) {
     final theme = context.theme;
     final textTheme = theme.textTheme;
 
@@ -85,7 +89,7 @@ class ProjectDetailScreen extends ConsumerWidget {
   }
 }
 
-class _ProjectScreen extends HookWidget {
+class _ProjectScreen extends ConsumerStatefulWidget {
   final Project project;
 
   final VoidCallback? onEdit;
@@ -94,51 +98,173 @@ class _ProjectScreen extends HookWidget {
   const _ProjectScreen(this.project, {this.onEdit, this.onDelete});
 
   @override
+  ConsumerState<_ProjectScreen> createState() => _ProjectScreenState();
+}
+
+class _ProjectScreenState extends ConsumerState<_ProjectScreen> {
+  Project get project => widget.project;
+
+  IntervalRecord<DateTime> dateFilter = DatePeriodFilter.monthly.toRecord();
+
+  void _handleTransactionsFilterAction() async {
+    final result = await showProjectTransactionsFilterModalSheet(
+      context,
+      initialValues: (transactionDateRange: dateFilter),
+    );
+
+    if (result == null) return;
+
+    setState(() {
+      dateFilter = result.transactionDateRange;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final Project(:name, :description) = project;
+    final projectTransactionsAsync = ref.watch(
+      projectTransactionsProvider(
+        project.id,
+        transactionDateFilter: dateFilter,
+      ),
+    );
+    final isLoading = projectTransactionsAsync.isLoading;
 
-    final appBar = AppBar(title: Text(name));
+    return Scaffold(
+      appBar: AppBar(title: Text(project.name)),
+      body: _buildBody(context, projectTransactionsAsync),
+      bottomNavigationBar: BottomAppBar(
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Builder(
+              builder: (context) {
+                return IconButton(
+                  onPressed: isLoading ? null : _handleTransactionsFilterAction,
+                  icon: Icon(Icons.filter_alt_outlined),
+                  tooltip: "Filter Transactions",
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-    final slivers = <Widget>[
-      SliverSectionCard(
-        margin: EdgeInsets.all(24.0).copyWith(bottom: 0.0),
-        header: Text("Project Details"),
-        contents: [
-          Table(
-            columnWidths: {
-              0: FixedColumnWidth(120.0),
-              1: FixedColumnWidth(16.0),
-            },
-            children: [
-              TableRow(children: [Text("Name"), Text(":"), Text(name)]),
-              TableRow(
+  Widget _buildBody(
+    BuildContext context,
+    AsyncValue<List<ProjectTransaction>> projectTransactionsAsync,
+  ) {
+    final Project(
+      :name,
+      :description,
+      :totalCashIn,
+      :totalCashOut,
+      :totalCash,
+    ) = widget.project;
+
+    final theme = context.theme;
+    final colorScheme = context.colorScheme;
+    final textTheme = theme.textTheme;
+
+    final sectionMargin = EdgeInsets.all(24.0).copyWith(bottom: 0.0);
+
+    return CustomScrollView(
+      slivers: <Widget>[
+        SliverSectionCard(
+          margin: sectionMargin,
+          header: Text("Project Details"),
+          contents: [
+            Table(
+              columnWidths: {
+                0: FixedColumnWidth(120.0),
+                1: FixedColumnWidth(16.0),
+              },
+              children: [
+                TableRow(children: [Text("Name"), Text(":"), Text(name)]),
+                TableRow(
+                  children: [
+                    Text("Description"),
+                    Text(":"),
+                    Text(description.fallbackWith("No project description.")),
+                  ],
+                ),
+              ],
+            ),
+            OutlinedButton.icon(
+              onPressed: widget.onEdit,
+              label: Text("Edit Details"),
+              icon: Icon(Icons.edit_outlined),
+            ),
+          ],
+        ),
+        SliverSectionCard(
+          margin: sectionMargin,
+          spacing: 4.0,
+          header: Text("Total Cash"),
+          contents: [
+            Text(
+              "\$ ${totalCash.toStringAsFixed(2)} ",
+              style: textTheme.titleLarge,
+            ),
+            Text.rich(
+              TextSpan(
                 children: [
-                  Text("Description"),
-                  Text(":"),
-                  Text(description.fallbackWith("No project description.")),
+                  TextSpan(
+                    text: "\$ ${totalCashIn.toStringAsFixed(2)}",
+                    style: textTheme.bodyMedium?.apply(
+                      color: colorScheme.primary,
+                    ),
+                  ),
+                  TextSpan(
+                    text: " - \$ ${(totalCashOut * -1).toStringAsFixed(2)}",
+                    style: textTheme.bodyMedium?.apply(
+                      color: colorScheme.error,
+                    ),
+                  ),
                 ],
               ),
-            ],
+            ),
+          ],
+        ),
+        SliverSectionCard(
+          margin: sectionMargin,
+          header: Text("Cashflow"),
+          contents: projectTransactionsAsync.maybeWhen<List<Widget>>(
+            orElse: () => [AppLoader()],
+            data: (transactions) {
+              return [
+                CashflowChart(
+                  transactions,
+                  header: Text(
+                    "Period "
+                    "${DateFormat.yMMMd().format(dateFilter.begin!)} until "
+                    "${DateFormat.yMMMd().format(dateFilter.end!)}",
+                  ),
+                  fallbackBuilder: (context) {
+                    return Text(
+                      "No transactions for Period "
+                      "${DateFormat.yMMMd().format(dateFilter.begin!)} until "
+                      "${DateFormat.yMMMd().format(dateFilter.end!)}",
+                    );
+                  },
+                ),
+              ];
+            },
           ),
-          OutlinedButton.icon(
-            onPressed: onEdit,
-            label: Text("Edit Details"),
-            icon: Icon(Icons.edit_outlined),
-          ),
-        ],
-      ),
-      SliverSectionCard(
-        header: Text("Danger Zone"),
-        contents: [
-          OutlinedErrorButton.icon(
-            onPressed: onDelete,
-            label: Text("Delete Project"),
-            icon: Icon(Icons.delete_outline),
-          ),
-        ],
-      ),
-    ];
-
-    return Scaffold(appBar: appBar, body: CustomScrollView(slivers: slivers));
+        ),
+        SliverSectionCard(
+          margin: sectionMargin.copyWith(bottom: sectionMargin.top),
+          header: Text("Danger Zone"),
+          contents: [
+            OutlinedErrorButton.icon(
+              onPressed: widget.onDelete,
+              label: Text("Delete Project"),
+              icon: Icon(Icons.delete_outline),
+            ),
+          ],
+        ),
+      ],
+    );
   }
 }

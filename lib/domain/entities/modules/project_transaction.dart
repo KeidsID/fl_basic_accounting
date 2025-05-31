@@ -1,7 +1,8 @@
-import "package:app/libs/decorators.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
 
 import "package:app/domain/entities/libs/types.dart";
+import "package:app/libs/decorators.dart";
+import "package:app/libs/extensions.dart";
 
 part "project_transaction.freezed.dart";
 part "project_transaction.g.dart";
@@ -34,9 +35,6 @@ final class ProjectTransaction extends Entity with _$ProjectTransaction {
   final List<ProjectTransactionTag> tags;
 
   /// Previous cash total before this transaction date.
-  ///
-  /// May be `zero` if this the only transaction on the project or not the first
-  /// item on transactions fetch.
   @ignoreJsonSerializable
   @override
   final double previousCashTotal;
@@ -53,10 +51,13 @@ final class ProjectTransaction extends Entity with _$ProjectTransaction {
     this.tags = const <ProjectTransactionTag>[],
     this.previousCashTotal = 0.0,
   }) : assert(amount != 0, "Transaction amount should not be zero.") {
-    final now = DateTime.now().toUtc();
+    final now = DateTime.now().toUtc().toMidnight();
 
-    this.transactionDate = transactionDate ?? now;
+    this.transactionDate = transactionDate?.toUtc().toMidnight() ?? now;
   }
+
+  /// Sum of [previousCashTotal] and [amount].
+  double get currentCashTotal => previousCashTotal + amount;
 
   /// Indicates if the transaction is a cash deposit.
   ///

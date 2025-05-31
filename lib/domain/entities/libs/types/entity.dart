@@ -28,8 +28,8 @@ class Entity with _$Entity {
   Entity({this.id = 0, DateTime? createdAt, DateTime? updatedAt}) {
     final now = DateTime.now().toUtc();
 
-    this.createdAt = createdAt ?? now;
-    this.updatedAt = updatedAt ?? now;
+    this.createdAt = createdAt?.toUtc() ?? now;
+    this.updatedAt = updatedAt?.toUtc() ?? now;
   }
 
   factory Entity.fromJson(Map<String, dynamic> json) => _$EntityFromJson(json);

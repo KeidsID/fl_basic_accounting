@@ -9,6 +9,15 @@ import "package:app/interfaces/libs/providers.dart";
 
 part "project_form_dialog.freezed.dart";
 
+@freezed
+sealed class ProjectFormDialogInitialValues
+    with _$ProjectFormDialogInitialValues {
+  const factory ProjectFormDialogInitialValues({
+    String? name,
+    String? description,
+  }) = _ProjectFormDialogInitialValues;
+}
+
 typedef ProjectFormDialogFieldsObserver =
     void Function(({String name, String description}) fields);
 
@@ -27,9 +36,9 @@ _FormFieldControlers _useFormControllers([
 }
 
 class ProjectFormDialog extends ConsumerStatefulWidget {
-  final ProjectFormDialogVariant variant;
-
-  /// Project to edit.
+  /// Project to edit, will determine the form variant.
+  ///
+  /// If not `null`, edit action button will rendered instead of create action.
   final Project? project;
 
   /// Initial values for the form fields.
@@ -40,7 +49,6 @@ class ProjectFormDialog extends ConsumerStatefulWidget {
 
   const ProjectFormDialog({
     super.key,
-    this.variant = ProjectFormDialogVariant.create,
     this.project,
     this.initialValues = const ProjectFormDialogInitialValues(),
     this.fieldsObserver,
@@ -53,9 +61,9 @@ class ProjectFormDialog extends ConsumerStatefulWidget {
 }
 
 class _ProjectFormDialogState extends ConsumerState<ProjectFormDialog> {
-  ProjectFormDialogFieldsObserver? get widget$fieldsObserver =>
-      widget.fieldsObserver;
+  bool get isCreateVariant => widget.project == null;
 
+  /// Indicated the form is validated once.
   bool hasValidated = false;
 
   FormFieldValidator<String>? _nameValidator(context) {
@@ -83,10 +91,9 @@ class _ProjectFormDialogState extends ConsumerState<ProjectFormDialog> {
         return setState(() => hasValidated = true);
       }
 
-      await switch (widget.variant) {
-        ProjectFormDialogVariant.create => _createAction(controllers),
-        ProjectFormDialogVariant.edit => _editAction(controllers),
-      };
+      (isCreateVariant)
+          ? await _createAction(controllers)
+          : await _editAction(controllers);
 
       if (context.mounted) return Navigator.of(context).pop();
     };
@@ -102,7 +109,7 @@ class _ProjectFormDialogState extends ConsumerState<ProjectFormDialog> {
   }
 
   Future<Project?> _editAction(_FormFieldControlers controllers) async {
-    if (widget.project == null) return null;
+    if (isCreateVariant) return null;
 
     final name = controllers.name.text;
     final description = controllers.description.text;
@@ -138,10 +145,9 @@ class _ProjectFormDialogState extends ConsumerState<ProjectFormDialog> {
             false => null,
           },
           child: AlertDialog(
-            title: Text(switch (widget.variant) {
-              ProjectFormDialogVariant.create => "Project Creation",
-              ProjectFormDialogVariant.edit => "Project Update",
-            }),
+            title: Text(
+              isCreateVariant ? "Project Creation" : "Project Update",
+            ),
             content: SizedBox(
               width: 600.0,
               child: Column(
@@ -169,7 +175,7 @@ class _ProjectFormDialogState extends ConsumerState<ProjectFormDialog> {
                     enabled: !isLoading,
                     textInputAction: TextInputAction.next,
                     onChanged: (value) {
-                      widget$fieldsObserver?.call((
+                      widget.fieldsObserver?.call((
                         name: value,
                         description: controllers.description.text,
                       ));
@@ -185,7 +191,7 @@ class _ProjectFormDialogState extends ConsumerState<ProjectFormDialog> {
                     maxLines: 3,
                     enabled: !isLoading,
                     onChanged: (value) {
-                      widget$fieldsObserver?.call((
+                      widget.fieldsObserver?.call((
                         name: controllers.name.text,
                         description: value,
                       ));
@@ -207,10 +213,7 @@ class _ProjectFormDialogState extends ConsumerState<ProjectFormDialog> {
                         isLoading
                             ? null
                             : _onActionExecute(context, controllers),
-                    child: Text(switch (widget.variant) {
-                      ProjectFormDialogVariant.create => "Create",
-                      ProjectFormDialogVariant.edit => "Update",
-                    }),
+                    child: Text(isCreateVariant ? "Create" : "Update"),
                   );
                 },
               ),
@@ -220,23 +223,4 @@ class _ProjectFormDialogState extends ConsumerState<ProjectFormDialog> {
       },
     );
   }
-}
-
-enum ProjectFormDialogVariant {
-  /// When creating new project.
-  create,
-
-  /// When editing existing project.
-  ///
-  /// Make sure to provide the [ProjectFormDialog.project] property.
-  edit,
-}
-
-@freezed
-sealed class ProjectFormDialogInitialValues
-    with _$ProjectFormDialogInitialValues {
-  const factory ProjectFormDialogInitialValues({
-    String? name,
-    String? description,
-  }) = _ProjectFormDialogInitialValues;
 }

@@ -12,7 +12,7 @@ class UpdateProjectTransactionUseCase
   const UpdateProjectTransactionUseCase(this._projectTransactionsRepository);
 
   @override
-  Future<ProjectTransaction?> execute(ProjectTransaction entity) {
-    return _projectTransactionsRepository.update(entity);
+  Future<ProjectTransaction?> execute(ProjectTransaction updatedEntity) {
+    return _projectTransactionsRepository.update(updatedEntity);
   }
 }
