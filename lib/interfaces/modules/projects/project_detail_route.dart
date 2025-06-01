@@ -1,4 +1,5 @@
 import "package:fl_utilities/fl_utilities.dart";
+import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:go_router/go_router.dart";
@@ -87,7 +88,7 @@ class _ProjectNotFoundScreen extends StatelessWidget {
   }
 }
 
-class _ProjectScreen extends ConsumerStatefulWidget {
+class _ProjectScreen extends StatefulWidget {
   final Project project;
 
   final VoidCallback? onEdit;
@@ -96,13 +97,19 @@ class _ProjectScreen extends ConsumerStatefulWidget {
   const _ProjectScreen(this.project, {this.onEdit, this.onDelete});
 
   @override
-  ConsumerState<_ProjectScreen> createState() => _ProjectScreenState();
+  State<_ProjectScreen> createState() => _ProjectScreenState();
 }
 
-class _ProjectScreenState extends ConsumerState<_ProjectScreen> {
+class _ProjectScreenState extends State<_ProjectScreen> {
   Project get project => widget.project;
 
   IntervalRecord<DateTime> dateFilter = DatePeriodFilter.monthly.toRecord();
+
+  ProjectTransactionsProvider get transactionsProvider =>
+      projectTransactionsProvider(
+        project.id,
+        filters: ProjectTransactionsProviderFilters(dateFilter: dateFilter),
+      );
 
   void _handleTransactionsFilterAction() async {
     final result = await showProjectTransactionsFilterModalSheet(
@@ -119,32 +126,31 @@ class _ProjectScreenState extends ConsumerState<_ProjectScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final projectTransactionsAsync = ref.watch(
-      projectTransactionsProvider(
-        project.id,
-        transactionDateFilter: dateFilter,
-      ),
-    );
-    final isLoading = projectTransactionsAsync.isLoading;
-
     return Scaffold(
       appBar: AppBar(title: Text(project.name)),
-      body: _buildBody(context, projectTransactionsAsync),
-      bottomNavigationBar: BottomAppBar(
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Builder(
-              builder: (context) {
-                return IconButton(
+      body: Consumer(
+        builder: (context, ref, _) {
+          return _buildBody(context, ref.watch(transactionsProvider));
+        },
+      ),
+      bottomNavigationBar: Consumer(
+        builder: (context, ref, _) {
+          final projectTransactionsAsync = ref.watch(transactionsProvider);
+          final isLoading = projectTransactionsAsync.isLoading;
+
+          return BottomAppBar(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
                   onPressed: isLoading ? null : _handleTransactionsFilterAction,
                   icon: Icon(Icons.filter_alt_outlined),
                   tooltip: "Filter Transactions",
-                );
-              },
+                ),
+              ],
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -166,6 +172,10 @@ class _ProjectScreenState extends ConsumerState<_ProjectScreen> {
     final textTheme = theme.textTheme;
 
     final sectionMargin = EdgeInsets.all(24.0).copyWith(bottom: 0.0);
+
+    final isLoading = projectTransactionsAsync.isLoading;
+    final transactions =
+        projectTransactionsAsync.valueOrNull ?? <ProjectTransaction>[];
 
     return CustomScrollView(
       slivers: <Widget>[
@@ -198,16 +208,16 @@ class _ProjectScreenState extends ConsumerState<_ProjectScreen> {
         ),
         SliverSectionCard(
           margin: sectionMargin,
-          spacing: 4.0,
           header: Text("Total Cash"),
           contents: [
-            Text(
-              NumberFormat.compactCurrency(symbol: "\$").format(totalCash),
-              style: textTheme.titleLarge,
-            ),
             Text.rich(
               TextSpan(
                 children: [
+                  TextSpan(
+                    text:
+                        "${NumberFormat.compactCurrency(symbol: "\$").format(totalCash)} \n",
+                    style: textTheme.titleLarge,
+                  ),
                   TextSpan(
                     text: "${NumberFormat.compact().format(totalCashIn)} ",
                     style: textTheme.bodyMedium?.apply(
@@ -228,28 +238,43 @@ class _ProjectScreenState extends ConsumerState<_ProjectScreen> {
         SliverSectionCard(
           margin: sectionMargin,
           header: Text("Cashflow"),
-          contents: projectTransactionsAsync.maybeWhen<List<Widget>>(
-            orElse: () => [AppLoader()],
-            data: (transactions) {
-              return [
-                CashflowChart(
-                  transactions,
-                  header: Text(
-                    "Period "
-                    "${DateFormat.yMMMd().format(dateFilter.begin!)} until "
-                    "${DateFormat.yMMMd().format(dateFilter.end!)}",
-                  ),
-                  fallbackBuilder: (context) {
-                    return Text(
-                      "No transactions for Period "
-                      "${DateFormat.yMMMd().format(dateFilter.begin!)} until "
-                      "${DateFormat.yMMMd().format(dateFilter.end!)}",
-                    );
-                  },
+          contents: [
+            if (isLoading) SizedBox(height: 300.0, child: AppLoader()),
+            if (!isLoading)
+              CashflowChart(
+                transactions,
+                header: Text(
+                  "Period "
+                  "${DateFormat.yMMMd().format(dateFilter.begin!)} until "
+                  "${DateFormat.yMMMd().format(dateFilter.end!)}",
                 ),
-              ];
-            },
-          ),
+                fallbackBuilder: (context) {
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "No transactions for Period "
+                        "${DateFormat.yMMMd().format(dateFilter.begin!)} until "
+                        "${DateFormat.yMMMd().format(dateFilter.end!)}",
+                      ),
+                      if (kDebugMode)
+                        DefaultTextStyle(
+                          style: textTheme.bodyMedium!.copyWith(
+                            color: colorScheme.error,
+                          ),
+                          child: projectTransactionsAsync.maybeWhen(
+                            orElse: () => SizedBox.shrink(),
+                            error: (error, stackTrace) {
+                              return Text("$error\n$stackTrace");
+                            },
+                          ),
+                        ),
+                    ],
+                  );
+                },
+              ),
+          ],
         ),
         SliverSectionCard(
           margin: sectionMargin.copyWith(bottom: sectionMargin.top),

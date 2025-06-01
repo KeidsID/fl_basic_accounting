@@ -51,9 +51,9 @@ final class ProjectTransaction extends Entity with _$ProjectTransaction {
     this.tags = const <ProjectTransactionTag>[],
     this.previousTotalCash = 0.0,
   }) : assert(amount != 0, "Transaction amount should not be zero.") {
-    final now = DateTime.now().toUtc().toMidnight();
+    final now = DateTime.now().toUtcMidnight();
 
-    this.transactionDate = transactionDate?.toUtc().toMidnight() ?? now;
+    this.transactionDate = transactionDate?.toUtcMidnight() ?? now;
   }
 
   /// Sum of [previousTotalCash] and [amount].

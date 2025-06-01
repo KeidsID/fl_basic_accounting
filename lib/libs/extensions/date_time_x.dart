@@ -9,4 +9,8 @@ extension DateTimeX on DateTime {
       microsecond: 0,
     );
   }
+
+  /// Returns a new [DateTime.utc] with the time set to midnight
+  /// (00:00:00.000000).
+  DateTime toUtcMidnight() => toUtc().toMidnight();
 }

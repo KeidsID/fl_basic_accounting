@@ -33,45 +33,65 @@ class ProjectTransactionsLocalData extends DatabaseAccessor<AppDatabase>
 
   /// [projectTransactions] read with [projectTransactionTags] MtM relation via
   /// [projectTransactionTagRelations].
-  Stream<List<ProjectTransaction>> _readQuery({
-    _ReadQueryWhereFilter? whereFilter,
-  }) async* {
+  ({
+    Future<List<ProjectTransaction>> Function() fetch,
+    Stream<List<ProjectTransaction>> Function() watch,
+  })
+  _readQuery({_ReadQueryWhereFilter? whereFilter}) {
     final transactionsQuery = projectTransactions.select();
     if (whereFilter != null) transactionsQuery.where(whereFilter);
     transactionsQuery.orderBy([(t) => OrderingTerm.asc(t.transactionDate)]);
 
-    final transactionsStream =
-        transactionsQuery.map((row) => row.toEntity()).watch();
+    final mappedQuery = transactionsQuery.map((row) => row.toEntity());
+
+    return (
+      fetch: () async {
+        final transactions = await mappedQuery.get();
+
+        return _fetchTransactionsTags(transactions);
+      },
+      watch: () {
+        return mappedQuery.watch().asyncMap((transactions) async {
+          return _fetchTransactionsTags(transactions);
+        });
+      },
+    );
+  }
+
+  Future<List<ProjectTransaction>> _fetchTransactionsTags(
+    List<ProjectTransaction> transactions,
+  ) async {
+    if (transactions.isEmpty) return transactions;
 
     final ptt = alias(projectTransactionTags, "ptt");
     final pttr = alias(projectTransactionTagRelations, "pttr");
 
-    yield* transactionsStream.asyncMap((transactions) async {
-      final transactionIds = transactions.map((e) => e.id).toList();
+    final transactionIds = transactions.map((e) => e.id).toList();
 
-      final tagRelationsQuery = pttr.select().join([
-        innerJoin(ptt, ptt.id.equalsExp(pttr.tagId)),
-      ]);
-      tagRelationsQuery.where(pttr.transactionId.isIn(transactionIds));
+    final tagRelationsQuery = pttr.select().join([
+      innerJoin(ptt, ptt.id.equalsExp(pttr.tagId)),
+    ]);
+    tagRelationsQuery.where(pttr.transactionId.isIn(transactionIds));
 
-      final tagRelations =
-          await tagRelationsQuery.map((row) {
-            final transactionId = row.readTable(pttr).transactionId;
-            final tagEntity = row.readTable(ptt).toEntity();
+    final tagRelations =
+        await tagRelationsQuery.map((row) {
+          final transactionId = row.readTable(pttr).transactionId;
+          final tagEntity = row.readTable(ptt).toEntity();
 
-            return (transactionId: transactionId, tagEntity: tagEntity);
-          }).get();
+          return (transactionId: transactionId, tagEntity: tagEntity);
+        }).get();
 
-      return transactions.map((transaction) {
-        final tags =
-            tagRelations
-                .where((e) => e.transactionId == transaction.id)
-                .map((e) => e.tagEntity)
-                .toList();
+    return transactions.map((transaction) {
+      if (tagRelations.isEmpty) return transaction;
 
-        return transaction.copyWith(tags: tags);
-      }).toList();
-    });
+      final tags =
+          tagRelations
+              .where((e) => e.transactionId == transaction.id)
+              .map((e) => e.tagEntity)
+              .toList();
+
+      return transaction.copyWith(tags: tags);
+    }).toList();
   }
 
   Stream<List<ProjectTransaction>> readAll({
@@ -82,7 +102,7 @@ class ProjectTransactionsLocalData extends DatabaseAccessor<AppDatabase>
       whereFilter: (pt) {
         return pt.transactionDate.isInRangeOf(startDate, endDate);
       },
-    );
+    ).watch();
   }
 
   Future<ProjectTransaction?> readById(
@@ -96,7 +116,7 @@ class ProjectTransactionsLocalData extends DatabaseAccessor<AppDatabase>
             return pt.id.equals(id) &
                 pt.transactionDate.isInRangeOf(startDate, endDate);
           },
-        ).last;
+        ).fetch();
 
     return results.firstOrNull;
   }
@@ -111,7 +131,7 @@ class ProjectTransactionsLocalData extends DatabaseAccessor<AppDatabase>
         return pt.projectId.equals(projectId) &
             pt.transactionDate.isInRangeOf(startDate, endDate);
       },
-    );
+    ).watch();
   }
 
   Future<({double cashIn, double cashOut})> getProjectTotalCash(
@@ -126,20 +146,22 @@ class ProjectTransactionsLocalData extends DatabaseAccessor<AppDatabase>
           pt.transactionDate.isInRangeOf(startDate, endDate);
     });
 
-    final cashInExp = CaseWhenExpression(
-      cases: [CaseWhen(pt.amount.isBiggerThanValue(0.0), then: pt.amount)],
-      orElse: Variable(0.0),
-    );
-    final cashOutExp = CaseWhenExpression(
-      cases: [CaseWhen(pt.amount.isSmallerThanValue(0.0), then: pt.amount)],
-      orElse: Variable(0.0),
-    );
+    final cashInExp =
+        CaseWhenExpression(
+          cases: [CaseWhen(pt.amount.isBiggerThanValue(0.0), then: pt.amount)],
+          orElse: Variable(0.0),
+        ).sum();
+    final cashOutExp =
+        CaseWhenExpression(
+          cases: [CaseWhen(pt.amount.isSmallerThanValue(0.0), then: pt.amount)],
+          orElse: Variable(0.0),
+        ).sum();
 
     final queryWithCashTotal = query.addColumns([cashInExp, cashOutExp]);
 
     return queryWithCashTotal.map((row) {
-      final cashIn = row.read(cashInExp)!;
-      final cashOut = row.read(cashOutExp)!;
+      final cashIn = row.read(cashInExp) ?? 0.0;
+      final cashOut = row.read(cashOutExp) ?? 0.0;
 
       return (cashIn: cashIn, cashOut: cashOut);
     }).getSingle();

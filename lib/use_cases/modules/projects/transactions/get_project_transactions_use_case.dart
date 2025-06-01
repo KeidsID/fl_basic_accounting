@@ -23,7 +23,7 @@ class GetProjectTransactionsUseCase
     GetProjectTransactionsUseCaseOptions options,
   ) {
     return _projectTransactionsRepository
-        .getProjectTransactions(
+        .readAllByProjectId(
           options.projectId,
           ProjectTrannsactionsRepositoryReadQuery(
             startDate: options.startDate,

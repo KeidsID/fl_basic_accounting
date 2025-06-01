@@ -3,6 +3,7 @@ import "package:injectable/injectable.dart";
 import "package:app/domain/entities.dart";
 import "package:app/domain/repositories.dart";
 import "package:app/infrastructures/libs/data.dart";
+import "package:app/libs/extensions/date_time_x.dart";
 
 @LazySingleton(as: ProjectTransactionsRepository)
 final class ProjectTransactionsRepositoryImpl
@@ -22,7 +23,10 @@ final class ProjectTransactionsRepositoryImpl
         const ProjectTrannsactionsRepositoryReadQuery(),
   ]) async {
     return _projectTransactionsLocalData
-        .readAll(startDate: query.startDate, endDate: query.endDate)
+        .readAll(
+          startDate: query.startDate?.toUtcMidnight(),
+          endDate: query.endDate?.toUtcMidnight(),
+        )
         .last;
   }
 
@@ -32,8 +36,8 @@ final class ProjectTransactionsRepositoryImpl
         const ProjectTrannsactionsRepositoryReadQuery(),
   ]) async* {
     yield* _projectTransactionsLocalData.readAll(
-      startDate: query.startDate,
-      endDate: query.endDate,
+      startDate: query.startDate?.toUtcMidnight(),
+      endDate: query.endDate?.toUtcMidnight(),
     );
   }
 
@@ -45,8 +49,8 @@ final class ProjectTransactionsRepositoryImpl
   ]) async {
     return _projectTransactionsLocalData.readById(
       id,
-      startDate: query.startDate,
-      endDate: query.endDate,
+      startDate: query.startDate?.toUtcMidnight(),
+      endDate: query.endDate?.toUtcMidnight(),
     );
   }
 
@@ -63,15 +67,15 @@ final class ProjectTransactionsRepositoryImpl
   }
 
   @override
-  Stream<List<ProjectTransaction>> getProjectTransactions(
+  Stream<List<ProjectTransaction>> readAllByProjectId(
     int projectId, [
     ProjectTrannsactionsRepositoryReadQuery query =
         const ProjectTrannsactionsRepositoryReadQuery(),
   ]) async* {
     yield* _projectTransactionsLocalData.readAllByProjectId(
       projectId,
-      startDate: query.startDate,
-      endDate: query.endDate,
+      startDate: query.startDate?.toUtcMidnight(),
+      endDate: query.endDate?.toUtcMidnight(),
     );
   }
 
@@ -83,8 +87,8 @@ final class ProjectTransactionsRepositoryImpl
   ]) async {
     return _projectTransactionsLocalData.getProjectTotalCash(
       projectId,
-      startDate: query.startDate,
-      endDate: query.endDate,
+      startDate: query.startDate?.toUtcMidnight(),
+      endDate: query.endDate?.toUtcMidnight(),
     );
   }
 }

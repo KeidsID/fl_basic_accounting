@@ -1,3 +1,4 @@
+import "package:freezed_annotation/freezed_annotation.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 
 import "package:app/domain/entities.dart";
@@ -5,20 +6,30 @@ import "package:app/libs/types.dart";
 import "package:app/service_locator.dart";
 import "package:app/use_cases.dart";
 
+part "project_transactions_provider.freezed.dart";
 part "project_transactions_provider.g.dart";
+
+@freezed
+sealed class ProjectTransactionsProviderFilters
+    with _$ProjectTransactionsProviderFilters {
+  const factory ProjectTransactionsProviderFilters({
+    IntervalRecord<DateTime>? dateFilter,
+  }) = _ProjectTransactionsProviderFilters;
+}
 
 @riverpod
 class ProjectTransactions extends _$ProjectTransactions {
   @override
   Stream<List<ProjectTransaction>> build(
     int projectId, {
-    IntervalRecord<DateTime>? transactionDateFilter,
+    ProjectTransactionsProviderFilters filters =
+        const ProjectTransactionsProviderFilters(),
   }) {
     return ServiceLocator.find<GetProjectTransactionsUseCase>().execute(
       GetProjectTransactionsUseCaseOptions(
         projectId: projectId,
-        startDate: transactionDateFilter?.begin,
-        endDate: transactionDateFilter?.end,
+        startDate: filters.dateFilter?.begin,
+        endDate: filters.dateFilter?.end,
       ),
     );
   }

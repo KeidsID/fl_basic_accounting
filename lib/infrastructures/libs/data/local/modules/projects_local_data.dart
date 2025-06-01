@@ -66,8 +66,8 @@ class ProjectsLocalData extends DatabaseAccessor<AppDatabase>
     return query.map((row) {
       final project = row.readTable(p).toEntity();
 
-      final totalCashIn = row.read(totalCashInExp)!;
-      final totalCashOut = row.read(totalCashOutExp)!;
+      final totalCashIn = row.read(totalCashInExp) ?? 0.0;
+      final totalCashOut = row.read(totalCashOutExp) ?? 0.0;
 
       return project.copyWith(
         totalCashIn: totalCashIn,

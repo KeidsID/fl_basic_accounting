@@ -139,107 +139,107 @@ class AppDatabase extends _$AppDatabase {
 }
 
 List<ProjectTransaction> _getDummyProjectTransactions(int projectId) {
-  final now = DateTime.now().toUtc().toMidnight();
-  final last31DaysAgo = now.subtract(Duration(days: 31));
+  final now = DateTime.now().toUtcMidnight();
+  final last30DaysAgo = now.subtract(Duration(days: 30)).toMidnight();
 
   return [
     ProjectTransaction(
       projectId: projectId,
       amount: 500,
       transactionType: ProjectTransactionType.equity,
-      description: "Initial Cash Deposit",
-      transactionDate: last31DaysAgo,
+      description: "Cash Deposit",
+      transactionDate: last30DaysAgo,
     ),
     ProjectTransaction(
       projectId: projectId,
       amount: 150,
       transactionType: ProjectTransactionType.asset,
       description: "Computer Equipment Purchase",
-      transactionDate: last31DaysAgo.add(Duration(days: 1)),
+      transactionDate: last30DaysAgo.add(Duration(days: 1)),
     ),
     ProjectTransaction(
       projectId: projectId,
       amount: -200,
       transactionType: ProjectTransactionType.operation,
       description: "Monthly Office Supplies Expense",
-      transactionDate: last31DaysAgo.add(Duration(days: 1)),
+      transactionDate: last30DaysAgo.add(Duration(days: 1)),
     ),
     ProjectTransaction(
       projectId: projectId,
       amount: 300,
       transactionType: ProjectTransactionType.operation,
       description: "Consulting Service Revenue",
-      transactionDate: last31DaysAgo.add(Duration(days: 6)),
+      transactionDate: last30DaysAgo.add(Duration(days: 6)),
     ),
     ProjectTransaction(
       projectId: projectId,
       amount: 1000,
       transactionType: ProjectTransactionType.equity,
       description: "Additional Investor Funding",
-      transactionDate: last31DaysAgo.add(Duration(days: 8)),
+      transactionDate: last30DaysAgo.add(Duration(days: 8)),
     ),
     ProjectTransaction(
       projectId: projectId,
       amount: -50,
       transactionType: ProjectTransactionType.operation,
       description: "Utility Bill Payment",
-      transactionDate: last31DaysAgo.add(Duration(days: 10)),
+      transactionDate: last30DaysAgo.add(Duration(days: 10)),
     ),
     ProjectTransaction(
       projectId: projectId,
       amount: 750,
       transactionType: ProjectTransactionType.asset,
       description: "Vehicle Acquisition",
-      transactionDate: last31DaysAgo.add(Duration(days: 12)),
+      transactionDate: last30DaysAgo.add(Duration(days: 12)),
     ),
     ProjectTransaction(
       projectId: projectId,
       amount: -120,
       transactionType: ProjectTransactionType.operation,
       description: "Marketing Campaign Expense",
-      transactionDate: last31DaysAgo.add(Duration(days: 15)),
+      transactionDate: last30DaysAgo.add(Duration(days: 15)),
     ),
     ProjectTransaction(
       projectId: projectId,
       amount: 600,
       transactionType: ProjectTransactionType.operation,
       description: "Product Sales Revenue",
-      transactionDate: last31DaysAgo.add(Duration(days: 18)),
+      transactionDate: last30DaysAgo.add(Duration(days: 18)),
     ),
     ProjectTransaction(
       projectId: projectId,
       amount: -300,
       transactionType: ProjectTransactionType.equity,
       description: "Owner's Drawing",
-      transactionDate: last31DaysAgo.add(Duration(days: 20)),
+      transactionDate: last30DaysAgo.add(Duration(days: 20)),
     ),
     ProjectTransaction(
       projectId: projectId,
       amount: 250,
       transactionType: ProjectTransactionType.operation,
       description: "Website Development Service",
-      transactionDate: last31DaysAgo.add(Duration(days: 22)),
+      transactionDate: last30DaysAgo.add(Duration(days: 22)),
     ),
     ProjectTransaction(
       projectId: projectId,
       amount: -80,
       transactionType: ProjectTransactionType.operation,
       description: "Travel Expense",
-      transactionDate: last31DaysAgo.add(Duration(days: 25)),
+      transactionDate: last30DaysAgo.add(Duration(days: 25)),
     ),
     ProjectTransaction(
       projectId: projectId,
       amount: 400,
-      transactionType: ProjectTransactionType.equity,
+      transactionType: ProjectTransactionType.liability,
       description: "Loan from Bank",
-      transactionDate: last31DaysAgo.add(Duration(days: 28)),
+      transactionDate: last30DaysAgo.add(Duration(days: 28)),
     ),
     ProjectTransaction(
       projectId: projectId,
       amount: -100,
       transactionType: ProjectTransactionType.operation,
       description: "Software Subscription Fee",
-      transactionDate: last31DaysAgo.add(Duration(days: 30)),
+      transactionDate: last30DaysAgo.add(Duration(days: 30)),
     ),
   ];
 }

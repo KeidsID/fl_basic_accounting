@@ -14,7 +14,7 @@ abstract interface class ProjectTransactionsRepository
   /// Get all transactions for a project.
   ///
   /// Can be filtered with [query].
-  Stream<List<ProjectTransaction>> getProjectTransactions(
+  Stream<List<ProjectTransaction>> readAllByProjectId(
     int projectId, [
     ProjectTrannsactionsRepositoryReadQuery query =
         const ProjectTrannsactionsRepositoryReadQuery(),
@@ -27,7 +27,7 @@ abstract interface class ProjectTransactionsRepository
   /// Can be filtered with [query].
   ///
   /// Supposed to be better performance than calculating it from
-  /// [getProjectTransactions].
+  /// [readAllByProjectId].
   Future<({double cashIn, double cashOut})> getProjectTotalCash(
     int projectId, [
     ProjectTrannsactionsRepositoryReadQuery query =

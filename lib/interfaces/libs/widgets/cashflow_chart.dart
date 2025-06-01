@@ -87,7 +87,7 @@ class CashflowChart extends HookWidget {
             LineChartData(
               minX: minX,
               maxX: maxX,
-              minY: minY / 0.2,
+              minY: minY,
               maxY: maxY * 1.5,
               lineBarsData: [LineChartBarData(spots: spots, isCurved: true)],
               lineTouchData: LineTouchData(
@@ -117,7 +117,7 @@ class CashflowChart extends HookWidget {
                               color:
                                   amount.isNegative
                                       ? colorScheme.error
-                                      : colorScheme.primary,
+                                      : colorScheme.primaryFixedDim,
                             ),
                           ),
                           TextSpan(
