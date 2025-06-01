@@ -83,7 +83,7 @@ class SliverSectionCard extends StatelessWidget {
                   ),
                   SliverClip(
                     child: SliverPadding(
-                      padding: padding.copyWith(top: 0.0),
+                      padding: padding.copyWith(top: 8.0),
                       sliver: _buildList(),
                     ),
                   ),
