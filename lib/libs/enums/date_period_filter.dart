@@ -6,10 +6,10 @@ enum DatePeriodFilter {
   /// Start from 7 days ago until today.
   weekly,
 
-  /// Start from first day of the month until today.
+  /// Start from 30 days ago until today.
   monthly,
 
-  /// Start from first day of the year until today.
+  /// Start from 365 days ago until today.
   annual;
 
   /// Try parse [dateFilterRecord] into [DatePeriodFilter].
@@ -36,9 +36,12 @@ enum DatePeriodFilter {
         begin: now.subtract(Duration(days: 7)),
         end: now,
       ),
-      DatePeriodFilter.monthly => (begin: now.copyWith(day: 1), end: now),
+      DatePeriodFilter.monthly => (
+        begin: now.subtract(Duration(days: 30)),
+        end: now,
+      ),
       DatePeriodFilter.annual => (
-        begin: now.copyWith(month: 1, day: 1),
+        begin: now.subtract(Duration(days: 365)),
         end: now,
       ),
     };
