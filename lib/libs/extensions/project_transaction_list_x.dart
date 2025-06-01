@@ -8,12 +8,24 @@ extension ProjectTransactionListX on List<ProjectTransaction> {
   /// Make sure the first item already fecthed the
   /// [ProjectTransaction.previousTotalCash]
   List<ProjectTransaction> calculateCashTotal() {
-    return mapIndexed((index, transaction) {
-      if (index == 0) return transaction;
+    if (isEmpty) return <ProjectTransaction>[];
 
-      return transaction.copyWith(
-        previousTotalCash: this[index - 1].currentTotalCash,
+    double previousTotalCashTmp = 0.0;
+
+    return mapIndexed((index, transaction) {
+      if (index == 0) {
+        previousTotalCashTmp = transaction.currentTotalCash;
+
+        return transaction;
+      }
+
+      final newTransaction = transaction.copyWith(
+        previousTotalCash: previousTotalCashTmp,
       );
+
+      previousTotalCashTmp = newTransaction.currentTotalCash;
+
+      return newTransaction;
     }).toList();
   }
 }
