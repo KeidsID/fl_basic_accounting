@@ -50,7 +50,7 @@ dev_dependencies:
   injectable_generator: ^2.7.0
 
   # router
-  go_router_builder: ^2.8.2
+  go_router_builder: ^3.0.0
 
   # state manager
   riverpod_generator: ^2.6.5
