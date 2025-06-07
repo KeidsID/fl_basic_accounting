@@ -173,7 +173,7 @@ i1.GeneratedColumn<int> _column_5(String aliasedName) =>
       false,
       type: i1.DriftSqlType.int,
       defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
-        'REFERENCES projects (id)',
+        'REFERENCES projects (id) ON DELETE CASCADE',
       ),
     );
 i1.GeneratedColumn<double> _column_6(String aliasedName) =>
@@ -241,7 +241,7 @@ i1.GeneratedColumn<int> _column_10(String aliasedName) =>
       false,
       type: i1.DriftSqlType.int,
       defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
-        'REFERENCES project_transactions (id)',
+        'REFERENCES project_transactions (id) ON DELETE CASCADE',
       ),
     );
 i1.GeneratedColumn<int> _column_11(String aliasedName) =>
@@ -251,7 +251,7 @@ i1.GeneratedColumn<int> _column_11(String aliasedName) =>
       false,
       type: i1.DriftSqlType.int,
       defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
-        'REFERENCES project_transaction_tags (id)',
+        'REFERENCES project_transaction_tags (id) ON DELETE CASCADE',
       ),
     );
 i0.MigrationStepWithVersion migrationSteps({

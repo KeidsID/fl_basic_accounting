@@ -12,7 +12,8 @@ import "../libs/types.dart";
 )
 @DataClassName("ProjectTransactionModel")
 class ProjectTransactions extends Table with DefaultTableColumns {
-  late final projectId = integer().references(Projects, #id)();
+  late final projectId =
+      integer().references(Projects, #id, onDelete: KeyAction.cascade)();
   late final amount = real()();
   late final transactionType = textEnum<ProjectTransactionType>()();
   late final description = text()();
@@ -22,7 +23,8 @@ class ProjectTransactions extends Table with DefaultTableColumns {
 @TableIndex(name: "idx_project_transaction_tags", columns: {#projectId, #name})
 @DataClassName("ProjectTransactionTagModel")
 class ProjectTransactionTags extends Table with DefaultTableColumns {
-  late final projectId = integer().references(Projects, #id)();
+  late final projectId =
+      integer().references(Projects, #id, onDelete: KeyAction.cascade)();
   late final name = text()();
   late final description = text().nullable()();
 
@@ -34,8 +36,18 @@ class ProjectTransactionTags extends Table with DefaultTableColumns {
 
 @DataClassName("ProjectTransactionTagRelationModel")
 class ProjectTransactionTagRelations extends Table with TimestampsTableColumns {
-  late final transactionId = integer().references(ProjectTransactions, #id)();
-  late final tagId = integer().references(ProjectTransactionTags, #id)();
+  late final transactionId =
+      integer().references(
+        ProjectTransactions,
+        #id,
+        onDelete: KeyAction.cascade,
+      )();
+  late final tagId =
+      integer().references(
+        ProjectTransactionTags,
+        #id,
+        onDelete: KeyAction.cascade,
+      )();
 
   @override
   Set<Column<Object>>? get primaryKey => {transactionId, tagId};

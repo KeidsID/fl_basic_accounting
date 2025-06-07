@@ -340,7 +340,7 @@ class ProjectTransactions extends Table
     type: DriftSqlType.int,
     requiredDuringInsert: true,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES projects (id)',
+      'REFERENCES projects (id) ON DELETE CASCADE',
     ),
   );
   late final GeneratedColumn<double> amount = GeneratedColumn<double>(
@@ -767,7 +767,7 @@ class ProjectTransactionTags extends Table
     type: DriftSqlType.int,
     requiredDuringInsert: true,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES projects (id)',
+      'REFERENCES projects (id) ON DELETE CASCADE',
     ),
   );
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
@@ -1109,7 +1109,7 @@ class ProjectTransactionTagRelations extends Table
     type: DriftSqlType.int,
     requiredDuringInsert: true,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES project_transactions (id)',
+      'REFERENCES project_transactions (id) ON DELETE CASCADE',
     ),
   );
   late final GeneratedColumn<int> tagId = GeneratedColumn<int>(
@@ -1119,7 +1119,7 @@ class ProjectTransactionTagRelations extends Table
     type: DriftSqlType.int,
     requiredDuringInsert: true,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES project_transaction_tags (id)',
+      'REFERENCES project_transaction_tags (id) ON DELETE CASCADE',
     ),
   );
   @override
