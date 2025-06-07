@@ -20,6 +20,9 @@ rules:
       - macos
       - linux
 
+      # dependabot
+      - deps
+
   references-empty:
     - 2
     - never

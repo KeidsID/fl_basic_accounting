@@ -27,6 +27,9 @@ abstract class GitlintConfig {
     "windows",
     "macos",
     "linux",
+
+    // dependabot
+    "deps",
   ];
 
   static const List<String> issuePrefixes = ["#", "release-"];
