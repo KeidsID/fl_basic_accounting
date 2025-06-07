@@ -14,6 +14,10 @@ typedef CashflowChartXAxisLabelBuilder =
 /// A widget that display chart of [transactions] cash total.
 ///
 /// So the chart Y axis will be [ProjectTransaction.currentTotalCash].
+///
+/// For the X axis, it will use formatted [ProjectTransaction.transactionDate]
+/// by default, but you can provide [xAxisLabelBuilder] to customize it. Just
+/// make sure to sort [transactions] to fit the X axis label condition.
 class CashflowChart extends HookWidget {
   final List<ProjectTransaction> transactions;
 
@@ -30,6 +34,9 @@ class CashflowChart extends HookWidget {
   /// Custom label on the X axis of the chart.
   ///
   /// Default to formatted [ProjectTransaction.transactionDate].
+  ///
+  /// If you provide this custom builder, please don't forget to sort
+  /// [transactions] to fit the condition.
   final CashflowChartXAxisLabelBuilder? xAxisLabelBuilder;
 
   /// Widget to build on [transactions] empty.
@@ -46,12 +53,12 @@ class CashflowChart extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    final calculatedTransactions = useMemoized(() {
+    final List<ProjectTransaction> calculatedTransactions = useMemoized(() {
       return transactions.calculateCashTotal();
     }, [transactions]);
 
-    final spots = useMemoized(() {
-      if (calculatedTransactions.isEmpty) return <FlSpot>[];
+    final List<FlSpot> spots = useMemoized(() {
+      if (calculatedTransactions.isEmpty) return [];
 
       return calculatedTransactions.mapIndexed((index, transaction) {
         return FlSpot(index.toDouble(), transaction.currentTotalCash);
@@ -98,31 +105,42 @@ class CashflowChart extends HookWidget {
                       final transaction = calculatedTransactions[index];
                       final amount = transaction.amount;
 
+                      final textStyle =
+                          textTheme.bodyMedium ??
+                          DefaultTextStyle.of(context).style;
+
+                      final isPreviousCashIsZero =
+                          transaction.previousTotalCash == 0;
+
                       return LineTooltipItem(
                         NumberFormat.compactCurrency(
                           symbol: "\$",
                         ).format(touchedSpot.y),
-                        textTheme.bodyMedium ??
-                            DefaultTextStyle.of(context).style,
+                        textStyle,
                         children: [
-                          TextSpan(
-                            text:
-                                " (${NumberFormat.compact().format(transaction.previousTotalCash)} ",
-                          ),
-                          TextSpan(
-                            text:
-                                (amount.isNegative ? "" : "+") +
-                                NumberFormat.compact().format(amount),
-                            style: textTheme.bodyMedium?.copyWith(
-                              color:
-                                  amount.isNegative
-                                      ? colorScheme.error
-                                      : colorScheme.primaryFixedDim,
+                          if (!isPreviousCashIsZero) ...[
+                            TextSpan(
+                              text:
+                                  " (${NumberFormat.compact().format(transaction.previousTotalCash)} ",
                             ),
-                          ),
+                            TextSpan(
+                              text:
+                                  (amount.isNegative ? "" : "+") +
+                                  NumberFormat.compact().format(amount),
+                              style: textStyle.copyWith(
+                                color:
+                                    amount.isNegative
+                                        ? colorScheme.error
+                                        : colorScheme.primaryFixedDim,
+                              ),
+                            ),
+                            TextSpan(text: ")"),
+                          ],
+                          TextSpan(text: "\n"),
                           TextSpan(
-                            text:
-                                ")\n${DateFormat.yMMMMd().format(transaction.transactionDate)}",
+                            text: DateFormat.yMMMMd().format(
+                              transaction.transactionDate,
+                            ),
                           ),
                         ],
                       );
@@ -136,7 +154,11 @@ class CashflowChart extends HookWidget {
                 bottomTitles: AxisTitles(
                   sideTitles: SideTitles(
                     showTitles: true,
-                    interval: (maxX - minX) / 3,
+                    interval: () {
+                      final interval = (maxX - minX) / 3;
+
+                      return interval == 0 ? null : interval;
+                    }(),
                     getTitlesWidget: (spotX, meta) {
                       if (spotX == meta.min || spotX == meta.max) {
                         return SizedBox.shrink();
