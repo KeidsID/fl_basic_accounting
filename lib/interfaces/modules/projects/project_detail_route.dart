@@ -103,35 +103,39 @@ class _ProjectScreen extends StatefulWidget {
 class _ProjectScreenState extends State<_ProjectScreen> {
   Project get project => widget.project;
 
-  IntervalRecord<DateTime> dateFilter = DatePeriodFilter.monthly.toRecord();
+  ProjectTransactionsFilterModalSheetValues filters = (
+    transactionDateRange: DatePeriodFilter.monthly.toRecord(),
+  );
 
   ProjectTransactionsProvider get transactionsProvider =>
       projectTransactionsProvider(
         project.id,
-        filters: ProjectTransactionsProviderFilters(dateFilter: dateFilter),
+        filters: ProjectTransactionsProviderFilters(
+          dateFilter: filters.transactionDateRange,
+        ),
       );
 
   void _handleTransactionsFilterAction() async {
-    final result = await showProjectTransactionsFilterModalSheet(
-      context,
-      initialValues: (transactionDateRange: dateFilter),
-    );
+    final ProjectTransactionsFilterModalSheetValues? result =
+        await showProjectTransactionsFilterModalSheet(
+          context,
+          initialValues: filters,
+        );
 
     if (result == null) return;
 
-    setState(() {
-      dateFilter = result.transactionDateRange;
-    });
+    setState(() => filters = result);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(project.name)),
-      body: Consumer(
-        builder: (context, ref, _) {
-          return _buildBody(context, ref.watch(transactionsProvider));
-        },
+      body: _ProjectScreenBody(
+        project: project,
+        transactionsProvider: transactionsProvider,
+        onProjectEdit: widget.onEdit,
+        onProjectDelete: widget.onDelete,
       ),
       bottomNavigationBar: Consumer(
         builder: (context, ref, _) {
@@ -154,18 +158,38 @@ class _ProjectScreenState extends State<_ProjectScreen> {
       ),
     );
   }
+}
 
-  Widget _buildBody(
-    BuildContext context,
-    AsyncValue<List<ProjectTransaction>> projectTransactionsAsync,
-  ) {
+class _ProjectScreenBody extends StatelessWidget {
+  final Project project;
+  final ProjectTransactionsProvider transactionsProvider;
+
+  final VoidCallback? onProjectEdit;
+  final VoidCallback? onProjectDelete;
+
+  const _ProjectScreenBody({
+    required this.project,
+    required this.transactionsProvider,
+    this.onProjectEdit,
+    this.onProjectDelete,
+  });
+
+  IntervalRecord<DateTime> get dateFilter =>
+      transactionsProvider.filters.dateFilter ?? (begin: null, end: null);
+
+  Widget _sliverWrap(List<Widget> children) {
+    return SliverToBoxAdapter(child: Wrap(children: children));
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final Project(
       :name,
       :description,
       :totalCashIn,
       :totalCashOut,
       :totalCash,
-    ) = widget.project;
+    ) = project;
 
     final theme = context.theme;
     final colorScheme = context.colorScheme;
@@ -173,17 +197,10 @@ class _ProjectScreenState extends State<_ProjectScreen> {
 
     final sectionMargin = EdgeInsets.all(24.0).copyWith(bottom: 0.0);
 
-    final isLoading = projectTransactionsAsync.isLoading;
-    final transactions =
-        projectTransactionsAsync.valueOrNull ?? <ProjectTransaction>[];
-
-    Widget sliverWrap(List<Widget> children) {
-      return SliverToBoxAdapter(child: Wrap(children: children));
-    }
-
     return CustomScrollView(
       slivers: <Widget>[
-        sliverWrap(
+        // Project details section
+        _sliverWrap(
           [
             SectionCard(
               margin: sectionMargin,
@@ -208,7 +225,7 @@ class _ProjectScreenState extends State<_ProjectScreen> {
                   ],
                 ),
                 OutlinedButton.icon(
-                  onPressed: widget.onEdit,
+                  onPressed: onProjectEdit,
                   label: Text("Edit Details"),
                   icon: Icon(Icons.edit_outlined),
                 ),
@@ -222,22 +239,26 @@ class _ProjectScreenState extends State<_ProjectScreen> {
                   TextSpan(
                     children: [
                       TextSpan(
-                        text:
-                            "${NumberFormat.compactCurrency(symbol: "\$").format(totalCash)} \n",
+                        text: NumberFormat.compactCurrency(
+                          symbol: "\$",
+                        ).format(totalCash),
                         style: textTheme.titleLarge,
                       ),
-                      TextSpan(
-                        text: "${NumberFormat.compact().format(totalCashIn)} ",
-                        style: textTheme.bodyMedium?.apply(
-                          color: colorScheme.primary,
+                      if (totalCash != 0.0) ...[
+                        TextSpan(
+                          text:
+                              "\n${NumberFormat.compact().format(totalCashIn)} ",
+                          style: textTheme.bodyMedium?.apply(
+                            color: colorScheme.primary,
+                          ),
                         ),
-                      ),
-                      TextSpan(
-                        text: NumberFormat.compact().format(totalCashOut),
-                        style: textTheme.bodyMedium?.apply(
-                          color: colorScheme.error,
+                        TextSpan(
+                          text: NumberFormat.compact().format(totalCashOut),
+                          style: textTheme.bodyMedium?.apply(
+                            color: colorScheme.error,
+                          ),
                         ),
-                      ),
+                      ],
                     ],
                   ),
                 ),
@@ -245,55 +266,68 @@ class _ProjectScreenState extends State<_ProjectScreen> {
             ),
           ].map((child) => SizedBox(width: 600.0, child: child)).toList(),
         ),
-        SliverSectionCard(
-          margin: sectionMargin,
-          header: Text("Cashflow"),
-          contents: [
-            if (isLoading) SizedBox(height: 300.0, child: AppLoader()),
-            if (!isLoading)
-              CashflowChart(
-                transactions,
-                header: Text(
-                  "Period "
-                  "${DateFormat.yMMMd().format(dateFilter.begin!)} until "
-                  "${DateFormat.yMMMd().format(dateFilter.end!)}",
-                ),
-                fallbackBuilder: (context) {
-                  return Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "No transactions for Period "
-                        "${DateFormat.yMMMd().format(dateFilter.begin!)} until "
-                        "${DateFormat.yMMMd().format(dateFilter.end!)}",
-                      ),
-                      if (kDebugMode)
-                        DefaultTextStyle(
-                          style: textTheme.bodyMedium!.copyWith(
-                            color: colorScheme.error,
+
+        // Cashflow chart section
+        Consumer(
+          builder: (context, ref, _) {
+            final transactionsAsync = ref.watch(transactionsProvider);
+
+            final isLoading = transactionsAsync.isLoading;
+            final transactions =
+                transactionsAsync.valueOrNull ?? <ProjectTransaction>[];
+
+            return SliverSectionCard(
+              margin: sectionMargin,
+              header: Text("Cashflow"),
+              contents: [
+                if (isLoading) SizedBox(height: 300.0, child: AppLoader()),
+                if (!isLoading)
+                  CashflowChart(
+                    transactions,
+                    header: Text(
+                      "Period "
+                      "${DateFormat.yMMMd().format(dateFilter.begin!)} until "
+                      "${DateFormat.yMMMd().format(dateFilter.end!)}",
+                    ),
+                    fallbackBuilder: (context) {
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "No transactions for Period "
+                            "${DateFormat.yMMMd().format(dateFilter.begin!)} until "
+                            "${DateFormat.yMMMd().format(dateFilter.end!)}",
                           ),
-                          child: projectTransactionsAsync.maybeWhen(
-                            orElse: () => SizedBox.shrink(),
-                            error: (error, stackTrace) {
-                              return Text("$error\n$stackTrace");
-                            },
-                          ),
-                        ),
-                    ],
-                  );
-                },
-              ),
-          ],
+                          if (kDebugMode)
+                            DefaultTextStyle(
+                              style: textTheme.bodyMedium!.copyWith(
+                                color: colorScheme.error,
+                              ),
+                              child: transactionsAsync.maybeWhen(
+                                orElse: () => SizedBox.shrink(),
+                                error: (error, stackTrace) {
+                                  return Text("$error\n$stackTrace");
+                                },
+                              ),
+                            ),
+                        ],
+                      );
+                    },
+                  ),
+              ],
+            );
+          },
         ),
-        sliverWrap(
+
+        _sliverWrap(
           [
             SectionCard(
               margin: sectionMargin.copyWith(bottom: sectionMargin.top),
               header: Text("Danger Zone"),
               contents: [
                 OutlinedErrorButton.icon(
-                  onPressed: widget.onDelete,
+                  onPressed: onProjectDelete,
                   label: Text("Delete Project"),
                   icon: Icon(Icons.delete_outline),
                 ),

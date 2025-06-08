@@ -51,6 +51,114 @@ class CashflowChart extends HookWidget {
     this.fallbackBuilder,
   });
 
+  AxisTitles _getXAxisTitles(
+    double minX,
+    double maxX, {
+    List<ProjectTransaction> transactions = const <ProjectTransaction>[],
+  }) {
+    final interval = (maxX - minX) / 4;
+
+    return AxisTitles(
+      sideTitles: SideTitles(
+        showTitles: true,
+        reservedSize: 40.0,
+        interval: interval == 0 ? null : interval,
+        getTitlesWidget: (spotX, meta) {
+          if (meta.min == spotX || meta.max == spotX) {
+            return const SizedBox.shrink();
+          }
+
+          final transaction = transactions[spotX.round()];
+
+          return SideTitleWidget(
+            meta: meta,
+            child: Text(
+              xAxisLabelBuilder?.call(transaction) ??
+                  DateFormat.yMMMd().format(transaction.transactionDate),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  AxisTitles _getYAxisTitles(double minY, double maxY) {
+    final interval = (maxY - minY) / 4;
+
+    return AxisTitles(
+      sideTitles: SideTitles(
+        showTitles: true,
+        reservedSize: 60.0,
+        interval: interval == 0 ? null : interval,
+      ),
+    );
+  }
+
+  FlBorderData _getBorderData(BuildContext context) {
+    return FlBorderData(
+      show: true,
+      border: Border.fromBorderSide(
+        BorderSide(color: context.colorScheme.outline),
+      ),
+    );
+  }
+
+  LineTouchTooltipData _getTouchTooltipData(
+    BuildContext context,
+    List<ProjectTransaction> transactions,
+  ) {
+    final theme = context.theme;
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+
+    return LineTouchTooltipData(
+      getTooltipColor: (_) => colorScheme.surfaceContainer,
+      tooltipBorder: BorderSide(color: colorScheme.outline),
+      getTooltipItems: (touchedSpots) {
+        return touchedSpots.map((touchedSpot) {
+          final index = touchedSpot.x.toInt();
+          final transaction = transactions[index];
+          final amount = transaction.amount;
+
+          final textStyle = (textTheme.bodyMedium ??
+                  DefaultTextStyle.of(context).style)
+              .copyWith(color: colorScheme.onSurface);
+
+          final isPreviousCashIsZero = transaction.previousTotalCash == 0;
+
+          return LineTooltipItem(
+            NumberFormat.compactCurrency(symbol: "\$").format(touchedSpot.y),
+            textStyle,
+            children: [
+              if (!isPreviousCashIsZero) ...[
+                TextSpan(
+                  text:
+                      " (${NumberFormat.compact().format(transaction.previousTotalCash)} ",
+                ),
+                TextSpan(
+                  text:
+                      (amount.isNegative ? "" : "+") +
+                      NumberFormat.compact().format(amount),
+                  style: textStyle.copyWith(
+                    color:
+                        amount.isNegative
+                            ? colorScheme.error
+                            : colorScheme.primary,
+                  ),
+                ),
+                TextSpan(text: ")"),
+              ],
+              TextSpan(text: "\n"),
+              TextSpan(
+                text: DateFormat.yMMMMd().format(transaction.transactionDate),
+              ),
+            ],
+          );
+        }).toList();
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final List<ProjectTransaction> calculatedTransactions = useMemoized(() {
@@ -72,17 +180,21 @@ class CashflowChart extends HookWidget {
     final minX = spots.first.x;
     final maxX = spots.last.x;
 
-    final spotsY = spots.map((s) => s.y);
-    final minY = spotsY.min;
-    final maxY = spotsY.max;
+    final spotYValues = spots.map((s) => s.y);
+    final minY = spotYValues.min;
+    final maxY = spotYValues.max * 1.5;
 
     final theme = context.theme;
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
 
+    final lineGradient = LinearGradient(
+      colors: [colorScheme.primary, colorScheme.secondary],
+    );
+
     return Column(
       mainAxisSize: MainAxisSize.min,
-      spacing: 16.0,
+      spacing: 8.0,
       children: [
         DefaultTextStyle(
           style: textTheme.bodyLarge ?? DefaultTextStyle.of(context).style,
@@ -95,91 +207,40 @@ class CashflowChart extends HookWidget {
               minX: minX,
               maxX: maxX,
               minY: minY,
-              maxY: maxY * 1.5,
-              lineBarsData: [LineChartBarData(spots: spots, isCurved: true)],
+              maxY: maxY,
+              lineBarsData: [
+                LineChartBarData(
+                  gradient: lineGradient,
+                  belowBarData: BarAreaData(
+                    show: true,
+                    gradient: LinearGradient(
+                      colors:
+                          lineGradient.colors
+                              .map((color) => color.withValues(alpha: 0.3))
+                              .toList(),
+                    ),
+                  ),
+                  isCurved: true,
+                  spots: spots,
+                ),
+              ],
               lineTouchData: LineTouchData(
-                touchTooltipData: LineTouchTooltipData(
-                  getTooltipItems: (touchedSpots) {
-                    return touchedSpots.map((touchedSpot) {
-                      final index = touchedSpot.x.toInt();
-                      final transaction = calculatedTransactions[index];
-                      final amount = transaction.amount;
-
-                      final textStyle =
-                          textTheme.bodyMedium ??
-                          DefaultTextStyle.of(context).style;
-
-                      final isPreviousCashIsZero =
-                          transaction.previousTotalCash == 0;
-
-                      return LineTooltipItem(
-                        NumberFormat.compactCurrency(
-                          symbol: "\$",
-                        ).format(touchedSpot.y),
-                        textStyle,
-                        children: [
-                          if (!isPreviousCashIsZero) ...[
-                            TextSpan(
-                              text:
-                                  " (${NumberFormat.compact().format(transaction.previousTotalCash)} ",
-                            ),
-                            TextSpan(
-                              text:
-                                  (amount.isNegative ? "" : "+") +
-                                  NumberFormat.compact().format(amount),
-                              style: textStyle.copyWith(
-                                color:
-                                    amount.isNegative
-                                        ? colorScheme.error
-                                        : colorScheme.primaryFixedDim,
-                              ),
-                            ),
-                            TextSpan(text: ")"),
-                          ],
-                          TextSpan(text: "\n"),
-                          TextSpan(
-                            text: DateFormat.yMMMMd().format(
-                              transaction.transactionDate,
-                            ),
-                          ),
-                        ],
-                      );
-                    }).toList();
-                  },
+                touchTooltipData: _getTouchTooltipData(
+                  context,
+                  calculatedTransactions,
                 ),
               ),
               titlesData: FlTitlesData(
                 topTitles: AxisTitles(),
-                rightTitles: AxisTitles(),
-                bottomTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    interval: () {
-                      final interval = (maxX - minX) / 3;
-
-                      return interval == 0 ? null : interval;
-                    }(),
-                    getTitlesWidget: (spotX, meta) {
-                      if (spotX == meta.min || spotX == meta.max) {
-                        return SizedBox.shrink();
-                      }
-
-                      final transaction = calculatedTransactions[spotX.round()];
-
-                      return SideTitleWidget(
-                        meta: meta,
-                        child: Text(
-                          xAxisLabelBuilder?.call(transaction) ??
-                              DateFormat.yMMMMd().format(
-                                transaction.transactionDate,
-                              ),
-                        ),
-                      );
-                    },
-                  ),
+                bottomTitles: _getXAxisTitles(
+                  minX,
+                  maxX,
+                  transactions: calculatedTransactions,
                 ),
+                leftTitles: _getYAxisTitles(minY, maxY),
+                rightTitles: _getYAxisTitles(minY, maxY),
               ),
-              gridData: FlGridData(drawVerticalLine: false),
+              borderData: _getBorderData(context),
             ),
           ),
         ),

@@ -141,7 +141,7 @@ final class SliverSectionCard extends SectionCardBase {
                   ),
                   SliverClip(
                     child: SliverPadding(
-                      padding: padding.copyWith(top: 8.0),
+                      padding: padding,
                       sliver: _buildContents(),
                     ),
                   ),

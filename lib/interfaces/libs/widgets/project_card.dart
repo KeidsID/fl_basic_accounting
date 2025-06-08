@@ -2,6 +2,7 @@ import "package:flutter/material.dart";
 
 import "package:app/domain/entities.dart";
 import "package:app/libs/extensions.dart";
+import "package:intl/intl.dart";
 
 class ProjectCard extends StatelessWidget {
   final Project project;
@@ -24,7 +25,7 @@ class ProjectCard extends StatelessWidget {
       overflow: TextOverflow.ellipsis,
     );
     final cashWidget = Text(
-      "\$ ${totalCash.toStringAsFixed(2)}",
+      NumberFormat.compactCurrency(symbol: "\$").format(totalCash),
       style: textTheme.titleMedium,
     );
     final descriptionWidget = Text(
