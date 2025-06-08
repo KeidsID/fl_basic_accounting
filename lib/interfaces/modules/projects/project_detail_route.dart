@@ -177,63 +177,73 @@ class _ProjectScreenState extends State<_ProjectScreen> {
     final transactions =
         projectTransactionsAsync.valueOrNull ?? <ProjectTransaction>[];
 
+    Widget sliverWrap(List<Widget> children) {
+      return SliverToBoxAdapter(child: Wrap(children: children));
+    }
+
     return CustomScrollView(
       slivers: <Widget>[
-        SliverSectionCard(
-          margin: sectionMargin,
-          header: Text("Project Details"),
-          contents: [
-            Table(
-              columnWidths: {
-                0: FixedColumnWidth(120.0),
-                1: FixedColumnWidth(16.0),
-              },
-              children: [
-                TableRow(children: [Text("Name"), Text(":"), Text(name)]),
-                TableRow(
+        sliverWrap(
+          [
+            SectionCard(
+              margin: sectionMargin,
+              header: Text("Project Details"),
+              contents: [
+                Table(
+                  columnWidths: {
+                    0: FixedColumnWidth(120.0),
+                    1: FixedColumnWidth(16.0),
+                  },
                   children: [
-                    Text("Description"),
-                    Text(":"),
-                    Text(description.fallbackWith("No project description.")),
+                    TableRow(children: [Text("Name"), Text(":"), Text(name)]),
+                    TableRow(
+                      children: [
+                        Text("Description"),
+                        Text(":"),
+                        Text(
+                          description.fallbackWith("No project description."),
+                        ),
+                      ],
+                    ),
                   ],
+                ),
+                OutlinedButton.icon(
+                  onPressed: widget.onEdit,
+                  label: Text("Edit Details"),
+                  icon: Icon(Icons.edit_outlined),
                 ),
               ],
             ),
-            OutlinedButton.icon(
-              onPressed: widget.onEdit,
-              label: Text("Edit Details"),
-              icon: Icon(Icons.edit_outlined),
+            SectionCard(
+              margin: sectionMargin,
+              header: Text("Total Cash"),
+              contents: [
+                Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text:
+                            "${NumberFormat.compactCurrency(symbol: "\$").format(totalCash)} \n",
+                        style: textTheme.titleLarge,
+                      ),
+                      TextSpan(
+                        text: "${NumberFormat.compact().format(totalCashIn)} ",
+                        style: textTheme.bodyMedium?.apply(
+                          color: colorScheme.primary,
+                        ),
+                      ),
+                      TextSpan(
+                        text: NumberFormat.compact().format(totalCashOut),
+                        style: textTheme.bodyMedium?.apply(
+                          color: colorScheme.error,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-        SliverSectionCard(
-          margin: sectionMargin,
-          header: Text("Total Cash"),
-          contents: [
-            Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(
-                    text:
-                        "${NumberFormat.compactCurrency(symbol: "\$").format(totalCash)} \n",
-                    style: textTheme.titleLarge,
-                  ),
-                  TextSpan(
-                    text: "${NumberFormat.compact().format(totalCashIn)} ",
-                    style: textTheme.bodyMedium?.apply(
-                      color: colorScheme.primary,
-                    ),
-                  ),
-                  TextSpan(
-                    text: NumberFormat.compact().format(totalCashOut),
-                    style: textTheme.bodyMedium?.apply(
-                      color: colorScheme.error,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+          ].map((child) => SizedBox(width: 600.0, child: child)).toList(),
         ),
         SliverSectionCard(
           margin: sectionMargin,
@@ -276,16 +286,20 @@ class _ProjectScreenState extends State<_ProjectScreen> {
               ),
           ],
         ),
-        SliverSectionCard(
-          margin: sectionMargin.copyWith(bottom: sectionMargin.top),
-          header: Text("Danger Zone"),
-          contents: [
-            OutlinedErrorButton.icon(
-              onPressed: widget.onDelete,
-              label: Text("Delete Project"),
-              icon: Icon(Icons.delete_outline),
+        sliverWrap(
+          [
+            SectionCard(
+              margin: sectionMargin.copyWith(bottom: sectionMargin.top),
+              header: Text("Danger Zone"),
+              contents: [
+                OutlinedErrorButton.icon(
+                  onPressed: widget.onDelete,
+                  label: Text("Delete Project"),
+                  icon: Icon(Icons.delete_outline),
+                ),
+              ],
             ),
-          ],
+          ].map((child) => SizedBox(width: 600.0, child: child)).toList(),
         ),
       ],
     );

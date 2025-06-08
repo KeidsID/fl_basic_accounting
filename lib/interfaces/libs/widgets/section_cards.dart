@@ -2,12 +2,7 @@ import "package:fl_utilities/fl_utilities.dart";
 import "package:flutter/material.dart";
 import "package:sliver_tools/sliver_tools.dart";
 
-/// {@template app.interfaces.libs.widgets.SliverSectionCard}
-/// Simple card that contain [header] and [contents].
-///
-/// Can only be used on [CustomScrollView.slivers].
-/// {@endtemplate}
-class SliverSectionCard extends StatelessWidget {
+abstract base class SectionCardBase extends StatelessWidget {
   /// Alignment to apply on [contents].
   final CrossAxisAlignment crossAxisAlignment;
 
@@ -31,7 +26,7 @@ class SliverSectionCard extends StatelessWidget {
   final List<Widget> contents;
 
   /// {@macro app.interfaces.libs.widgets.SliverSectionCard}
-  const SliverSectionCard({
+  const SectionCardBase({
     super.key,
     this.crossAxisAlignment = CrossAxisAlignment.start,
     this.margin = const EdgeInsets.all(24.0),
@@ -41,10 +36,84 @@ class SliverSectionCard extends StatelessWidget {
     this.contents = const <Widget>[],
   });
 
+  Widget _buildHeader(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        DefaultTextStyle(
+          style: context.textTheme.titleLarge ?? TextStyle(),
+          child: header,
+        ),
+        Divider(),
+      ],
+    );
+  }
+}
+
+/// {@template app.interfaces.libs.widgets.SectionCard}
+/// Simple card that contain [header] and [contents].
+/// {@endtemplate}
+final class SectionCard extends SectionCardBase {
+  /// {@macro app.interfaces.libs.widgets.SectionCard}
+  const SectionCard({
+    super.key,
+    super.crossAxisAlignment,
+    super.margin,
+    super.padding,
+    super.spacing,
+    required super.header,
+    super.contents,
+  });
+
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
+    return Card.outlined(
+      margin: margin,
+      child: Padding(
+        padding: padding,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Builder(builder: _buildHeader),
+            Builder(builder: _buildContents),
+          ],
+        ),
+      ),
+    );
+  }
 
+  Widget _buildContents(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: crossAxisAlignment,
+      spacing: spacing,
+      children: contents,
+    );
+  }
+}
+
+/// {@template app.interfaces.libs.widgets.SliverSectionCard}
+/// Simple card that contain [header] and [contents] but act as scrollable
+/// accordion section.
+///
+/// Can only be used on [CustomScrollView.slivers].
+/// {@endtemplate}
+final class SliverSectionCard extends SectionCardBase {
+  /// {@macro app.interfaces.libs.widgets.SliverSectionCard}
+  const SliverSectionCard({
+    super.key,
+    super.crossAxisAlignment,
+    super.margin,
+    super.padding,
+    super.spacing,
+    required super.header,
+    super.contents,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return MultiSliver(
       pushPinnedChildren: true,
       children: [
@@ -67,24 +136,13 @@ class SliverSectionCard extends StatelessWidget {
                         top: padding.top + margin.top,
                         bottom: 0.0,
                       ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        spacing: 8.0,
-                        children: [
-                          DefaultTextStyle(
-                            style: textTheme.titleLarge ?? TextStyle(),
-                            child: header,
-                          ),
-                          Divider(),
-                        ],
-                      ),
+                      child: Builder(builder: _buildHeader),
                     ),
                   ),
                   SliverClip(
                     child: SliverPadding(
                       padding: padding.copyWith(top: 8.0),
-                      sliver: _buildList(),
+                      sliver: _buildContents(),
                     ),
                   ),
                 ],
@@ -96,15 +154,13 @@ class SliverSectionCard extends StatelessWidget {
     );
   }
 
-  Widget _buildList() {
+  Widget _buildContents() {
     return SliverList.separated(
       itemCount: contents.length,
       itemBuilder: (_, index) {
         final content = contents[index];
 
-        if (crossAxisAlignment == CrossAxisAlignment.stretch) {
-          return content;
-        }
+        if (crossAxisAlignment == CrossAxisAlignment.stretch) return content;
 
         return Container(
           alignment: switch (crossAxisAlignment) {
