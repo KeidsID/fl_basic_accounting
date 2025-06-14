@@ -56,7 +56,7 @@ dev_dependencies:
   riverpod_generator: ^2.6.5
 
   # database
-  drift_dev: ^2.26.0
+  drift_dev: ^2.27.0
 
   # lints
   custom_lint: ^0.7.5
